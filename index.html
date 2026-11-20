@@ -238,7 +238,7 @@ footer p{margin:4px 0}
 <footer>
   <div class="wrap">
     <p><strong style="color:var(--text)">Starting trial lens tool for personal clinical use. The fitting doctor verifies the final prescription on eye.</strong></p>
-    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each maker's fitting guide. Yearly costs are est. for both eyes: boxes needed for 1 year times ODspecs retailer box prices (19 Nov 2026); prices change often. Target base curve comes from the average K table (40.00–47.00 D → 8.9–8.3 mm).</p>
+    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each maker's fitting guide. Yearly prices are rough estimates for both eyes from US retailer prices (Nov 2026). Target base curve comes from the average K table (40.00–47.00 D → 8.9–8.3 mm).</p>
   </div>
 </footer>
 
@@ -869,13 +869,13 @@ const PRICE = {
   aohg:[51.87,77.99,6], aohgt:[68.87,97.99,6], aomf:[97.87,124.99,6], aond:[91.87,139.99,6],
   dacp:[66.87,97.86,90], dacpt:[89.98,109.99,90], dacpmf:[104.87,143.99,90], dt1:[88.59,136.99,90], dt1t:[108.99,157.99,90], dt1mf:[115.99,165.99,90],
   p1:[62.63,86.99,90], p1t:[83.74,117.99,90], p7:[57.99,119.99,27], p7t:[75.99,139.99,27], t30:[52.87,80.99,6], t30t:[65.99,87.99,6], t30mf:[89.85,122.99,6], t30mfa:[117.49,179.99,6],
-  bt1:[42.99,85.99,90], bt1t:[60.87,104.99,90], bt1p:[71.87,121.99,90], inf:[80.12,123.99,null], inft:[100.12,161.99,90], infmf:[100.12,173.99,null],
+  bt1:[42.99,85.99,90], bt1t:[60.87,104.99,90], bt1p:[71.87,121.99,90], inf:[80.12,123.99,90], inft:[100.12,161.99,90], infmf:[100.12,173.99,90],
   ult:[32.64,71.99,6], ultt:[42.37,84.99,6], ultp:[74.87,106.99,6], ultmfa:[99.37,158.99,6], sfd:[52.87,75.99,90], pv2:[58.87,84.99,6], pv2t:[71.24,94.99,6], pv2p:[79.87,112.99,6], sft:[57.74,76.99,6], sfmf:[61.87,83.99,6],
   av:[24.87,42.99,6], avt:[35.87,53.99,6], bf:[36.87,62.99,6], bfe:[42.29,70.99,6], bfmf:[68.87,99.99,6], bft:[53.85,71.99,6], bftxr:[115.99,166.99,6], bftmf:[123.99,182.99,6],
-  c1d:[58.39,81.99,90], c1dt:[79.87,100.99,90], c1dmf:[77.24,102.99,90], md:[49.14,193.99,'90/180'], mdt:[84.60,114.99,90], mdmf:[109.62,158.99,90], pc1:[61.87,103.99,90], pc1mf:[89.99,122.99,90],
+  c1d:[58.39,81.99,90], c1dt:[79.87,100.99,90], c1dmf:[77.24,102.99,90], md:[58.99,113.99,90], mdt:[84.60,114.99,90], mdmf:[109.62,158.99,90], pc1:[61.87,103.99,90], pc1mf:[89.99,122.99,90],
   pcs:[56.24,74.99,6], pct:[82.49,109.99,6], pcmf:[92.87,129.99,6], pcmfxr:[135.87,204.99,6], pcmft:[159.99,201.99,6], pctxr:[131.87,200.99,6], bmt:[44.99,59.99,6], mis:[119.99,190.00,90],
   m1d:[62.29,123.99,90], m1dt:[99.98,145.99,90], m1dmf:[110.98,162.99,90], ao:[124.49,213.98,24], aot:[43.49,74.99,6], aomf2:[46.04,70.99,6], ao1:[93.49,116.99,90], ao1t:[104.99,139.99,90],
-  amx:[104.24,138.99,null], amxt:[42.99,69.99,30], amxmf:[132.74,176.99,90], amxmft:[51.87,89.99,30], vita:[99.74,142.99,12], vitat:[58.84,91.99,6], abil:[50.00,120.00,30],
+  amx:[104.24,140.99,90], amxt:[42.99,69.99,30], amxmf:[132.74,176.99,90], amxmft:[51.87,89.99,30], vita:[99.74,142.99,12], vitat:[58.84,91.99,6], abil:[50.00,120.00,30],
   mirut:[42.00,64.50,6], miru1dt:[52.00,97.00,90], mirumf:[34.99,92.50,6], nv:[120.00,140.00,90], sdm:[325,399,null], sdp:[255,325.99,null], smf:[225,325,null],
 };
 // Est. 1-year supply, both eyes: lenses per eye per year from the replacement schedule,
@@ -887,15 +887,12 @@ function yearCost(p) {
   const boxes = Math.max(1, Math.round(2 * n / x[2]));
   return { lo: boxes * x[0], hi: boxes * x[1], boxes, pack: x[2], box: x };
 }
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
 const priceText = (p, long) => {
-  const y = yearCost(p), x = PRICE[p.id];
-  if (!y) {
-    if (!long) return '';
-    if (!x) return 'No price listed (custom: set by the lab)';
-    return `No yearly estimate: ${typeof x[2] === 'number' ? 'replacement schedule not standard' : 'box size not stated by ODspecs'}. Box price $${Math.round(x[0])}–${Math.round(x[1])} (est.)`;
-  }
-  const r = `$${Math.round(y.lo)}–${Math.round(y.hi)}`;
-  return long ? `${r} per year, both eyes: ${y.boxes} boxes of ${y.pack} at $${Math.round(y.box[0])}–${Math.round(y.box[1])} per box (est., ODspecs retailer prices)` : `${r}/yr est.`;
+  const y = yearCost(p);
+  if (!y) return long ? (p.custom ? 'Set by the lab' : 'Not available') : '';
+  const r = `${money(y.lo)}–${money(y.hi)}`;
+  return long ? `${r} per year` : `${r}/yr`;
 };
 const typeOf = p => p.custom ? 'Custom' : TYPE_LABEL[p.ty[0]];
 function shortNote(m, r) {
@@ -959,7 +956,7 @@ function details(row, r) {
       <div><dt>Cylinder / axis</dt><dd>${esc(cylText(p))}</dd></div>
       <div><dt>ADD</dt><dd>${esc(p.ty.some(t => t === 'mf' || t === 'mft') ? addText(p) : 'Not made')}</dd></div>
       <div><dt>Base curves · DIA</dt><dd>${esc(p.bc)} mm · ${esc(p.dia)} mm</dd></div>
-      <div><dt>1-year supply (est.)</dt><dd>${esc(priceText(p, true))}</dd></div>
+      <div><dt>Yearly price, both eyes (est.)</dt><dd>${esc(priceText(p, true))}</dd></div>
     </dl>${mf}${bothEyes(row, r)}
     ${notes.length ? `<ul class="notes">${notes.map(t => `<li class="${/UNVERIFIED|isagree/.test(t) ? 'w' : ''}">${esc(t)}</li>`).join('')}</ul>` : ''}
     <div class="copyrow"><button class="btn" type="button" data-copy="${esc(line)}">${svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')}Copy</button><span class="preview">${esc(line)}</span><span class="copied" aria-live="polite"></span></div></div>`;
@@ -968,7 +965,7 @@ function lensRow(row, r) {
   const p = row.p, m = row.m, key = `${r.eye}:${p.id}`, open = state.open.has(key);
   const note = shortNote(m, r);
   return `<div class="lens${key === state.snap ? ' snap' : ''}"><div class="row" role="button" tabindex="0" data-key="${key}" aria-expanded="${open}">
-      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${$('#grp').checked ? '' : esc(p.mk) + ' · '}${typeOf(p)}</span>${yearCost(p) ? `<span class="price" title="Estimated 1-year supply for both eyes (ODspecs retailer prices)">${priceText(p)}</span>` : ''}<span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
+      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${$('#grp').checked ? '' : esc(p.mk) + ' · '}${typeOf(p)}</span>${yearCost(p) ? `<span class="price" title="Estimated cost of a 1-year supply, both eyes">${priceText(p)}</span>` : ''}<span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
       <dl class="grid">
         <div><dt>Replace</dt><dd class="rep">${REP_LABEL[p.mod] || esc(p.mod)}</dd></div>
         <div><dt>Lens power</dt><dd class="pw"><span class="v">${lensRx(m)}</span>${m.add ? ` <span class="add">ADD ${esc(m.add.lens)}</span>` : ''}</dd></div>
