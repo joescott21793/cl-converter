@@ -7,6 +7,8 @@
 <!-- Hard privacy rule: the page may not send anything anywhere. -->
 <meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
+<meta name="description" content="Glasses Rx to soft contact lens: vertex conversion, toric and multifocal lens matching by brand, for chairside use.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230D1416'/%3E%3Cpath d='M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z' fill='none' stroke='%23EEF3F2' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='none' stroke='%23F2B544' stroke-width='1.6'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#0D1416">
@@ -51,9 +53,9 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .eyename b{font-size:1.3rem;letter-spacing:-.01em;line-height:1.1}
 .eyename small{color:var(--muted);font-size:.8rem}
 .cell label{display:block;font-size:.82rem;color:var(--muted)}
-.rxin,.addin,.kin{width:100%;border:0;background:transparent;color:var(--white);font:600 1.15rem var(--mono);padding:2px 0;min-height:36px}
+.rxin,.addin,.kin{width:100%;border:0;background:transparent;color:var(--white);font:600 1.15rem var(--mono);padding:2px 0;min-height:44px}
 .rxin::placeholder,.addin::placeholder,.kin::placeholder{color:var(--dim);font-weight:500}
-.rxin:focus,.addin:focus,.kin:focus{outline:none}
+.rxin:focus-visible,.addin:focus-visible,.kin:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
 .echo{font-size:.85rem;color:var(--muted);min-height:0}
 .echo:empty{display:none}
 .echo b{color:var(--text);font-weight:600;font-family:var(--mono)}
@@ -68,13 +70,13 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 #clear:hover{background:rgba(255,122,133,.24)}
 .set{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:10px;color:var(--muted);font-size:.88rem}
 .set > span{display:inline-flex;align-items:center;gap:8px}
-.vin{width:58px;min-height:40px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--text);font:600 .95rem var(--mono);text-align:center}
+.vin{width:58px;min-height:44px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--text);font:600 .95rem var(--mono);text-align:center}
 .pills{display:inline-flex;gap:6px}
 .pills input{position:absolute;opacity:0;pointer-events:none}
-.pills label,.chip{min-height:40px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font:600 .9rem var(--sans);cursor:pointer;white-space:nowrap}
+.pills label,.chip{min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font:600 .9rem var(--sans);cursor:pointer;white-space:nowrap}
 .pills input:checked+label,.chip[aria-pressed=true]{background:var(--white);color:var(--ink);border-color:var(--white)}
 .pills input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
-.hint{color:var(--dim);margin:0}
+.hint{color:var(--muted);margin:0}
 @media (max-width:1000px){.entry{grid-template-columns:minmax(0,1fr)}.acts{flex-direction:row;border-left:0;border-top:1px solid var(--line)}.act.o{border-top:0;border-left:1px solid var(--line)}}
 .eyetag{display:none;color:var(--text);font-weight:700}
 @media (max-width:640px){
@@ -92,12 +94,12 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 /* filter bar */
 .filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:18px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
 .filters .chips{display:flex;gap:6px;flex-wrap:wrap}
-.sel{min-height:40px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);padding:0 12px;font:600 .9rem var(--sans)}
-.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:0 12px;min-height:40px;color:var(--muted);flex:1 1 160px;max-width:260px}
+.sel{min-height:44px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);padding:0 12px;font:600 .9rem var(--sans)}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:0 12px;min-height:44px;color:var(--muted);flex:1 1 160px;max-width:260px}
 .search input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font-size:.95rem}
-.search input:focus{outline:none}
+.search input:focus-visible{outline:2px solid var(--accent);outline-offset:6px;border-radius:4px}
 .search:focus-within{border-color:var(--accent)}
-.tog{display:inline-flex;align-items:center;gap:8px;min-height:40px;cursor:pointer;font-size:.9rem;color:var(--text)}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-size:.9rem;color:var(--text)}
 .tog input{appearance:none;width:36px;height:22px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background .15s}
 .tog input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .15s}
 .tog input:checked{background:var(--accent)}
@@ -176,6 +178,12 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .notes{margin:10px 0 0;padding-left:1.1em;color:var(--muted);font-size:.9rem}
 .notes li.w{color:var(--warn)}
 .copyrow{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn:active,.act:active,.chip:active,.pills label:active,.switch button:active{transform:scale(.97)}
+.btn,.act,.chip,.pills label,.switch button{transition:background .15s,transform .1s}
+.skip{position:absolute;left:16px;top:8px;z-index:20;display:inline-flex;align-items:center;min-height:44px;background:var(--white);color:var(--ink);padding:0 16px;border-radius:999px;font-weight:700;transform:translateY(-200%)}
+.skip:focus{transform:none}
+.flab{color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){.btn:active,.act:active,.chip:active,.pills label:active,.switch button:active{transform:none}}
 .btn{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--white);color:var(--ink);font:700 .9rem var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .preview{font:.85rem var(--mono);color:var(--muted);word-break:break-word}
 .copied{color:var(--accent);font-weight:600}
@@ -185,6 +193,7 @@ footer p{margin:4px 0}
 </style>
 </head>
 <body>
+<a class="skip" href="#cols">Skip to lens results</a>
 <header class="top">
   <div class="wrap">
     <div class="brand"><svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>CL Rx Converter</div>
@@ -214,7 +223,7 @@ footer p{margin:4px 0}
     </div>
   </section>
   <div class="set" id="set">
-    <span>Vertex <label class="sr" for="vd">Vertex distance in mm</label><input id="vd" class="vin" type="text" inputmode="decimal" value="12"> mm</span>
+    <span><label for="vd">Vertex (mm)</label><input id="vd" class="vin" type="text" inputmode="decimal" value="12"></span>
     <span id="dom-l">Dominant eye <span class="pills" role="radiogroup" aria-labelledby="dom-l"><input type="radio" name="dom" id="dom-od" value="OD" checked><label for="dom-od">OD</label><input type="radio" name="dom" id="dom-os" value="OS"><label for="dom-os">OS</label></span></span>
     <p class="hint">Rx like -2.50 -1.25 x 180. "pl", "DS" and -250 shorthand work.</p>
   </div>
@@ -224,10 +233,10 @@ footer p{margin:4px 0}
     <button class="chip filtbtn" id="filtbtn" type="button" aria-expanded="false" aria-controls="more"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters</button>
     <span class="sep"></span>
     <div class="more" id="more">
-    <label class="sr" for="rep">Replacement</label>
-    <select class="sel" id="rep"><option value="">Any replacement</option><option value="daily">Daily</option><option value="wk">1–2 week</option><option value="monthly">Monthly</option><option value="other">Custom</option></select>
-    <label class="sr" for="sort">Sort</label>
-    <select class="sel" id="sort"><option value="auto">Sort: closest BC</option><option value="fit">Sort: best power fit</option><option value="name">Sort: name</option><option value="price">Sort: yearly cost, low to high</option><option value="dk">Sort: Dk high to low</option></select>
+    <label class="flab" for="rep">Replace</label>
+    <select class="sel" id="rep"><option value="">Any</option><option value="daily">Daily</option><option value="wk">1–2 week</option><option value="monthly">Monthly</option><option value="other">Custom</option></select>
+    <label class="flab" for="sort">Sort</label>
+    <select class="sel" id="sort"><option value="auto">Closest BC</option><option value="fit">Best power fit</option><option value="name">Name</option><option value="price">Yearly cost, low to high</option><option value="dk">Dk, high to low</option></select>
     <label class="tog"><input type="checkbox" id="hidk">High Dk 100+</label>
     <label class="tog"><input type="checkbox" id="grp">By company</label>
     <label class="tog"><input type="checkbox" id="spec">Custom &amp; no-trial lenses</label>
@@ -236,7 +245,7 @@ footer p{margin:4px 0}
   </div>
 
   <div class="switch" id="switch" role="group" aria-label="Eye"></div>
-  <div class="cols" id="cols"></div>
+  <div class="cols" id="cols" tabindex="-1"></div>
 </main>
 
 <footer>
@@ -1013,7 +1022,7 @@ function computeRows() {
 }
 function syncSortLabel() {
   const anyK = ctx.eyes.OD.kOk || ctx.eyes.OS.kOk, auto = $('#sort option[value=auto]'), fit = $('#sort option[value=fit]');
-  auto.textContent = anyK ? 'Sort: closest BC' : 'Sort: best fit';
+  auto.textContent = anyK ? 'Closest BC' : 'Best fit';
   fit.hidden = !anyK; // identical to the default until a K is entered
   if (!anyK && $('#sort').value === 'fit') $('#sort').value = 'auto';
 }
@@ -1041,7 +1050,11 @@ async function copyText(text, out) {
 }
 
 /* ----- Events ----- */
-['input', 'change'].forEach(ev => { $('.entry').addEventListener(ev, render); $('#set').addEventListener(ev, render); });
+// Text fields redraw on every keystroke ('input'). No redraw on their 'change' (fired on blur):
+// it would replace the button being tapped and swallow the first tap after typing.
+$('.entry').addEventListener('input', render);
+$('#set').addEventListener('input', render);
+$('#set').addEventListener('change', e => { if (e.target.type === 'radio') render(); });
 $('#q').addEventListener('input', render);
 ['#rep', '#sort', '#hidk', '#grp', '#spec'].forEach(s => $(s).addEventListener('change', render));
 $('#filtbtn').addEventListener('click', e => { const open = $('#more').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', open); });
