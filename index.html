@@ -223,7 +223,7 @@ footer p{margin:4px 0}
     <label class="sr" for="rep">Replacement</label>
     <select class="sel" id="rep"><option value="">Any replacement</option><option value="daily">Daily</option><option value="wk">1–2 week</option><option value="monthly">Monthly</option><option value="other">Custom</option></select>
     <label class="sr" for="sort">Sort</label>
-    <select class="sel" id="sort"><option value="auto">Sort: closest BC</option><option value="fit">Sort: best power fit</option><option value="name">Sort: name</option><option value="dk">Sort: Dk high to low</option></select>
+    <select class="sel" id="sort"><option value="auto">Sort: closest BC</option><option value="fit">Sort: best power fit</option><option value="name">Sort: name</option><option value="price">Sort: yearly cost, low to high</option><option value="dk">Sort: Dk high to low</option></select>
     <label class="tog"><input type="checkbox" id="hidk">High Dk 100+</label>
     <label class="tog"><input type="checkbox" id="grp">By company</label>
     <label class="tog"><input type="checkbox" id="spec">Custom &amp; no-trial lenses</label>
@@ -238,7 +238,7 @@ footer p{margin:4px 0}
 <footer>
   <div class="wrap">
     <p><strong style="color:var(--text)">Starting trial lens tool for personal clinical use. The fitting doctor verifies the final prescription on eye.</strong></p>
-    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each maker's fitting guide. Prices are est. retailer ranges per box from ODspecs (19 Nov 2026) and change often. Target base curve comes from the average K table (40.00–47.00 D → 8.9–8.3 mm).</p>
+    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each maker's fitting guide. Yearly costs are est. for both eyes: boxes needed for 1 year times ODspecs retailer box prices (19 Nov 2026); prices change often. Target base curve comes from the average K table (40.00–47.00 D → 8.9–8.3 mm).</p>
   </div>
 </footer>
 
@@ -850,10 +850,11 @@ const bySort = {
   fit: (a, b) => a.m.rank - b.m.rank,
   name: (a, b) => a.p.nm.localeCompare(b.p.nm),
   dk: (a, b) => b.p.dk - a.p.dk,
+  price: (a, b) => { const m = x => { const y = yearCost(x.p); return y ? (y.lo + y.hi) / 2 : Infinity; }; return m(a) - m(b); },
 };
 function sortRows(rows) {
   const s = $('#sort').value, f = bySort[s];
-  rows.sort((a, b) => (s === 'name' || s === 'dk' ? 0 : tier(a.p) - tier(b.p)) || f(a, b) || a.p.nm.localeCompare(b.p.nm));
+  rows.sort((a, b) => (s === 'name' || s === 'dk' || s === 'price' ? 0 : tier(a.p) - tier(b.p)) || f(a, b) || a.p.nm.localeCompare(b.p.nm));
   if ($('#grp').checked) rows.sort((a, b) => { const ia = BIG4.indexOf(a.p.mk), ib = BIG4.indexOf(b.p.mk); return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib) || a.p.mk.localeCompare(b.p.mk); });
   return rows;
 }
@@ -877,7 +878,25 @@ const PRICE = {
   amx:[104.24,138.99,null], amxt:[42.99,69.99,30], amxmf:[132.74,176.99,90], amxmft:[51.87,89.99,30], vita:[99.74,142.99,12], vitat:[58.84,91.99,6], abil:[50.00,120.00,30],
   mirut:[42.00,64.50,6], miru1dt:[52.00,97.00,90], mirumf:[34.99,92.50,6], nv:[120.00,140.00,90], sdm:[325,399,null], sdp:[255,325.99,null], smf:[225,325,null],
 };
-const priceText = (p, long) => { const x = PRICE[p.id]; if (!x) return long ? 'No price listed (custom: set by the lab)' : ''; const r = `$${Math.round(x[0])}–${Math.round(x[1])}`; return long ? `${r} per box${x[2] ? ` of ${x[2]}` : ''} (est., ODspecs retailer prices)` : `${r}${x[2] ? `/${x[2]}` : ''} est.`; };
+// Est. 1-year supply, both eyes: lenses per eye per year from the replacement schedule,
+// boxes = round(2 × lenses ÷ pack), cost = boxes × ODspecs per-box range. Needs a stated pack size.
+const PER_YEAR = { daily: 365, '1wk': 52, '2wk': 26, monthly: 12 };
+function yearCost(p) {
+  const x = PRICE[p.id], n = PER_YEAR[p.mod];
+  if (!x || !n || typeof x[2] !== 'number') return null;
+  const boxes = Math.max(1, Math.round(2 * n / x[2]));
+  return { lo: boxes * x[0], hi: boxes * x[1], boxes, pack: x[2], box: x };
+}
+const priceText = (p, long) => {
+  const y = yearCost(p), x = PRICE[p.id];
+  if (!y) {
+    if (!long) return '';
+    if (!x) return 'No price listed (custom: set by the lab)';
+    return `No yearly estimate: ${typeof x[2] === 'number' ? 'replacement schedule not standard' : 'box size not stated by ODspecs'}. Box price $${Math.round(x[0])}–${Math.round(x[1])} (est.)`;
+  }
+  const r = `$${Math.round(y.lo)}–${Math.round(y.hi)}`;
+  return long ? `${r} per year, both eyes: ${y.boxes} boxes of ${y.pack} at $${Math.round(y.box[0])}–${Math.round(y.box[1])} per box (est., ODspecs retailer prices)` : `${r}/yr est.`;
+};
 const typeOf = p => p.custom ? 'Custom' : TYPE_LABEL[p.ty[0]];
 function shortNote(m, r) {
   const n = [];
@@ -940,7 +959,7 @@ function details(row, r) {
       <div><dt>Cylinder / axis</dt><dd>${esc(cylText(p))}</dd></div>
       <div><dt>ADD</dt><dd>${esc(p.ty.some(t => t === 'mf' || t === 'mft') ? addText(p) : 'Not made')}</dd></div>
       <div><dt>Base curves · DIA</dt><dd>${esc(p.bc)} mm · ${esc(p.dia)} mm</dd></div>
-      <div><dt>Price (est.)</dt><dd>${esc(priceText(p, true))}</dd></div>
+      <div><dt>1-year supply (est.)</dt><dd>${esc(priceText(p, true))}</dd></div>
     </dl>${mf}${bothEyes(row, r)}
     ${notes.length ? `<ul class="notes">${notes.map(t => `<li class="${/UNVERIFIED|isagree/.test(t) ? 'w' : ''}">${esc(t)}</li>`).join('')}</ul>` : ''}
     <div class="copyrow"><button class="btn" type="button" data-copy="${esc(line)}">${svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')}Copy</button><span class="preview">${esc(line)}</span><span class="copied" aria-live="polite"></span></div></div>`;
@@ -949,7 +968,7 @@ function lensRow(row, r) {
   const p = row.p, m = row.m, key = `${r.eye}:${p.id}`, open = state.open.has(key);
   const note = shortNote(m, r);
   return `<div class="lens${key === state.snap ? ' snap' : ''}"><div class="row" role="button" tabindex="0" data-key="${key}" aria-expanded="${open}">
-      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${$('#grp').checked ? '' : esc(p.mk) + ' · '}${typeOf(p)}</span>${PRICE[p.id] ? `<span class="price" title="Estimated retailer price range per box (ODspecs)">${priceText(p)}</span>` : ''}<span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
+      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${$('#grp').checked ? '' : esc(p.mk) + ' · '}${typeOf(p)}</span>${yearCost(p) ? `<span class="price" title="Estimated 1-year supply for both eyes (ODspecs retailer prices)">${priceText(p)}</span>` : ''}<span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
       <dl class="grid">
         <div><dt>Replace</dt><dd class="rep">${REP_LABEL[p.mod] || esc(p.mod)}</dd></div>
         <div><dt>Lens power</dt><dd class="pw"><span class="v">${lensRx(m)}</span>${m.add ? ` <span class="add">ADD ${esc(m.add.lens)}</span>` : ''}</dd></div>
