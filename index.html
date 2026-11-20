@@ -326,7 +326,8 @@ const P = [
 {id:'c1dmf',mk:'CooperVision',nm:'clariti 1 day multifocal 3 Add',ty:['mf'],mod:'daily',dk:60,bc:'8.6',dia:'14.1',st:'current',sph:g(-12,8,10,8),add:'odsLMH'},
 {id:'md',mk:'CooperVision',nm:'MyDay',ty:['sph'],mod:'daily',dk:80,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,6,5)},
 {id:'mdt',mk:'CooperVision',nm:'MyDay toric',ty:['toric'],mod:'daily',dk:80,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C4,ax:A10}]},
-{id:'mdmf',mk:'CooperVision',nm:'MyDay multifocal',ty:['mf'],mod:'daily',dk:80,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,10,8),add:'odsLMH'},
+{id:'mdmf',mk:'CooperVision',nm:'MyDay multifocal',ty:['mf'],mod:'daily',dk:80,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,10,8),add:'cvmyday',notes:['ADD rule and range confirmed by CooperVision MyDay multifocal fitting guide (Binocular Progressive System, 2022): +8.00 to −10.00 (0.25), −10.50 to −12.00 (0.50).'],
+  guide:{name:'CooperVision MyDay multifocal fitting guide',url:'https://coopervision.co.uk/sites/coopervision.co.uk/files/myday-mf-fitting-guide-v3.pdf',tweak:'Distance weak: ±0.25 D on the dominant eye. Near weak: ±0.25 D on the non-dominant eye. Do not change the ADD.'}},
 {id:'pc1',mk:'CooperVision',nm:'Proclear 1 day',ty:['sph'],mod:'daily',dk:27,bc:'8.7 (8.6 plus)',dia:'14.2',st:'current',sph:g(-12,8,6,5)},
 {id:'pc1mf',mk:'CooperVision',nm:'Proclear 1 day multifocal',ty:['mf'],mod:'daily',dk:27,bc:'8.7',dia:'14.2',st:'current',tableOnly:true,dispSph:'+6.00 to −10.00 (0.50 over ±6.00)',dispAdd:'Single ADD',notes:['Single ADD design. No CooperVision guide read, so not auto-matched (UNVERIFIED mapping).']},
 {id:'pcs',mk:'CooperVision',nm:'Proclear Sphere',ty:['sph'],mod:'monthly',dk:21,bc:'8.2 / 8.6',dia:'14.2',st:'tld',sph:g(-20,20,6,6)},
@@ -412,6 +413,14 @@ const ADD = {
     return { lens: `+${a.toFixed(2)} ${design}`, rule: `Spectacle ADD +${add.toFixed(2)} → ADD +${a.toFixed(2)}; dominant D, non-dominant ${nd}`, notes: add > 2.5 + EPS ? ['Table row "+2.50 or above" used'] : [] };
   },
   // No manufacturer guide found: ADD bands as listed on ODspecs for the product
+  // CooperVision MyDay multifocal guide (Binocular Progressive System): dominant eye always LOW
+  cvmyday(add, dom) {
+    if (add < 0.75 - EPS) return { err: 'ADD below +0.75 is outside the MyDay multifocal table' };
+    if (add > 2.50 + EPS) return { err: 'ADD above +2.50 is outside the MyDay multifocal table' };
+    const nd = add <= 1.25 + EPS ? 'LOW' : add <= 1.75 + EPS ? 'MED' : 'HIGH';
+    const band = add <= 1.25 + EPS ? '+0.75 to +1.25' : add <= 1.75 + EPS ? '+1.50 to +1.75' : '+2.00 to +2.50';
+    return dom ? { lens: 'LOW', rule: `Spectacle ADD ${band} → LOW on the dominant eye` } : { lens: nd, rule: `Spectacle ADD ${band} → ${nd} on the non-dominant eye (dominant eye LOW)` };
+  },
   odsLMH(add) {
     const n = ['No CooperVision fitting guide found for this lens: ADD band from the ODspecs listing (UNVERIFIED method)'];
     if (between(add, 0.75, 1.25)) return { lens: 'Low', rule: 'ODspecs: Low +0.75 to +1.25', notes: n, uv: true };
@@ -433,7 +442,7 @@ const ADD = {
 const ADD_FLAGS = {
   t30mfa: 'UNVERIFIED ADD rule: the package insert points to a TOTAL30 family fitting guide edition that covers this lens, but that edition is not online (Alcon links an older edition without it). ADD table taken from the TOTAL30 Multifocal guide.',
 };
-const GUIDE_OF = { alcon: 'alcon', bl: 'bl', jj: 'jj', cvbf: 'cvbf', cvbtmf: 'cvbtmf', odsLMH: null, odsLH: null, revive: null };
+const GUIDE_OF = { alcon: 'alcon', bl: 'bl', jj: 'jj', cvbf: 'cvbf', cvbtmf: 'cvbtmf', cvmyday: null, odsLMH: null, odsLH: null, revive: null };
 
 /* ---------- Optics ---------- */
 // Round to 0.25 D. Ties go toward plus: less minus for myopes, more plus for hyperopes.
@@ -848,7 +857,7 @@ function cylText(p) {
   const cyls = [...new Set(p.bands.flatMap(b => b.c))].sort((a, b) => b - a).map(c => fD(c));
   return `${cyls.join(', ')} · ${p.bands.some(b => b.ax.length < 18) ? 'some axes limited by power' : AX_DESC(p.bands[0].ax)}`;
 }
-const addText = p => ({ alcon: 'LO, MED, HI', bl: 'Low, High', jj: 'LOW, MID, HIGH', cvbf: '+1.00 to +2.50, D and N', cvbtmf: '+1.00 to +2.50, D and N', odsLMH: 'Low, Med, High', odsLH: 'Low, High', revive: '+0.50 to +3.00' }[p.add] || 'Not made');
+const addText = p => ({ alcon: 'LO, MED, HI', bl: 'Low, High', jj: 'LOW, MID, HIGH', cvbf: '+1.00 to +2.50, D and N', cvbtmf: '+1.00 to +2.50, D and N', cvmyday: 'LOW, MED, HIGH', odsLMH: 'Low, Med, High', odsLH: 'Low, High', revive: '+0.50 to +3.00' }[p.add] || 'Not made');
 // One-line chart note: "OD CL TRIAL: ACUVUE OASYS MAX 1-Day -2.00DS BC 8.5 mm Daily"
 function chartLine(r, row) {
   const pw = lensRx(row.m, true).replace(/ DS$/, 'DS').replace(/ x /, 'x').replace(/ /g, '');
