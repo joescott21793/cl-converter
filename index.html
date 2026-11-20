@@ -270,7 +270,8 @@ const P = [
 {id:'dt1t',mk:'Alcon',nm:'DAILIES TOTAL1 for Astigmatism',ty:['toric'],mod:'daily',dk:140,bc:'8.6',dia:'14.5',st:'current',bands:[
   {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},
   {s:[[0.5,4,0.25],[-8,-6.5,0.5]],c:C3,ax:LIM},{s:[[0.5,4,0.25],[-8,-6.5,0.5]],c:[-2.25],ax:LIM5}]},
-{id:'dt1mf',mk:'Alcon',nm:'DAILIES TOTAL1 Multifocal',ty:['mf'],mod:'daily',dk:140,bc:'8.5',dia:'14.1',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam'},
+{id:'dt1mf',mk:'Alcon',nm:'DAILIES TOTAL1 Multifocal',ty:['mf'],mod:'daily',dk:140,bc:'8.5',dia:'14.1',st:'current',sph:g(-10,6,10,6),add:'alcon',notes:['ADD table confirmed in Alcon DAILIES TOTAL1 Multifocal Professional Fitting Guide (up to +1.25 LO, +1.50 to +2.00 MED, +2.25 to +2.50 HI, both eyes).'],
+  guide:{name:'Alcon DAILIES TOTAL1 Multifocal fitting guide',url:'https://embed.widencdn.net/pdf/plus/alcon/pzd8cvgagr/W900087400_PFIG_DELFCON_A_US.pdf?u=4rqn9d',tweak:'Near weak: +0.50 D on the non-dominant eye, same ADD.'}},
 {id:'p1',mk:'Alcon',nm:'PRECISION1',ty:['sph'],mod:'daily',dk:90,bc:'8.3',dia:'14.2',st:'current',sph:g(-12,8,6,6,0.5)},
 {id:'p1t',mk:'Alcon',nm:'PRECISION1 for Astigmatism',ty:['toric'],mod:'daily',dk:90,bc:'8.5',dia:'14.5',st:'current',bands:[
   {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25,-2.75],ax:LIM},
@@ -716,7 +717,7 @@ if (typeof module !== 'undefined') module.exports = E;
 <script>
 /* ===== UI ===== */
 (() => {
-const { P, convert, matchProduct, rank, fD, rxStr, parseRx, parseAdd, parseK, targetBC, nearestBC, ADD_FLAGS, GUIDE_OF } = E;
+const { P, convert, matchProduct, rank, fD, rxStr, parseRx, parseAdd, parseK, targetBC, nearestBC, GUIDE_OF } = E;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const svg = d => `<svg class="i" viewBox="0 0 24 24">${d}</svg>`;
@@ -853,10 +854,10 @@ function chartLine(r, row) {
   return `${r.eye} CL TRIAL: ${row.p.nm} ${pw}${row.m.add ? ` ADD ${row.m.add.lens}` : ''} BC ${bcUsed(row)} mm ${REP_LABEL[row.p.mod] || row.p.mod}`;
 }
 function details(row, r) {
-  const p = row.p, m = row.m, g = p.add && GUIDES[GUIDE_OF[p.add]];
+  const p = row.p, m = row.m, g = p.guide || (p.add && GUIDES[GUIDE_OF[p.add]]);
   const mf = m.add ? `<div class="mfbox"><p><span class="k">ADD ${esc(m.add.lens)}</span> for the ${r.dom ? 'dominant' : 'non-dominant'} eye. ${esc(m.add.rule)}.</p>
     ${g ? `<p>${esc(g.tweak)}</p><p><a href="${g.url}" target="_blank" rel="noopener noreferrer">${esc(g.name)} ↗</a></p>` : '<p>No maker fitting guide found for this lens. ADD band from ODspecs (unverified).</p>'}</div>` : '';
-  const notes = [...m.notes.filter(n => !/^ADD|Spectacle ADD|ODspecs: trial|Made to order|Custom lens/.test(n)), ...(p.notes || []), ...(p.addFlag && m.add ? [ADD_FLAGS[p.addFlag]] : [])];
+  const notes = [...m.notes.filter(n => !/^ADD|Spectacle ADD|ODspecs: trial|Made to order|Custom lens/.test(n)), ...(p.notes || [])];
   const line = chartLine(r, row);
   return `<div class="det"><dl class="dl">
       <div><dt>Sphere powers</dt><dd>${esc(sphRange(p))}</dd></div>
