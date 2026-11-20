@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- Hard privacy rule: the page may not send anything anywhere. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>CL Rx Converter</title>
+<style>
+:root{
+  --bg:#0B0B0F; --panel:#15151C; --panel2:#1C1C25; --line:#2C2C38;
+  --text:#F2F2F5; --muted:#A9A9B8; --accent:#2EE6C5; --accent-ink:#04201B;
+  --warn:#FFC24B; --bad:#FF6B81; --ok:#2EE6C5;
+  --r:14px; --serif:"New York","Iowan Old Style",ui-serif,Georgia,serif;
+  --sans:-apple-system,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(1.7rem,4vw,2.4rem)} h2{font-size:clamp(1.4rem,3vw,1.9rem);margin-top:.2em} h3{font-size:1.15rem}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono,.n,.bigrx,.kv dd,.step input{font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+/* nav */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(11,11,15,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:60px;overflow-x:auto}
+.brand{font-family:var(--serif);font-weight:700;font-size:1.1rem;white-space:nowrap;margin-right:auto}
+.brand b{color:var(--accent)}
+.top nav{display:flex;gap:4px}
+.top nav a{color:var(--text);text-decoration:none;padding:10px 12px;border-radius:10px;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;font-size:.95rem}
+.top nav a:hover{background:var(--panel2)}
+.s{display:none}
+@media (max-width:560px){.brand{display:none}.top nav{width:100%;justify-content:space-between}.top nav a{padding:10px 8px}.l{display:none}.s{display:inline}}
+section{padding:28px 0 12px}
+.lede{color:var(--muted);margin:0 0 18px;max-width:70ch}
+/* controls */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:767px){.grid2{grid-template-columns:1fr}}
+.settings{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;margin-bottom:14px}
+.field label,.legend{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.02em}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{min-height:44px;min-width:56px;padding:0 14px;display:flex;align-items:center;justify-content:center;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;font-size:.95rem;margin:0}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:3px solid var(--accent);outline-offset:2px}
+.eye h3{display:flex;align-items:center;gap:10px}
+.eye h3 .tag{font-family:var(--sans);font-size:.75rem;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted)}
+.eye h3 .tag.dom{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.inputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:420px){.inputs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.step{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
+.step button{width:40px;min-height:48px;border:0;background:transparent;color:var(--accent);font-size:1.3rem;cursor:pointer;flex:none}
+.step button:hover{background:#262632}
+.step input{min-width:0;width:100%;border:0;background:transparent;color:var(--text);font:600 1.1rem var(--mono);text-align:center;padding:0}
+.step input:focus{outline:none}
+.step:focus-within{outline:3px solid var(--accent);outline-offset:1px}
+input.plain{min-height:48px;width:90px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);font:600 1.1rem var(--mono);text-align:center}
+.err{color:var(--bad);font-size:.9rem;margin:8px 0 0;min-height:1.2em}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:600 .95rem var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s,transform .15s}
+.btn:hover{background:#262632}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{background:#5BF0D6}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast{color:var(--accent);font-weight:600;align-self:center;min-height:1.2em}
+/* results */
+.results{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+@media (max-width:767px){.results{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.col>h3{margin:6px 0 0}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
+.rcard h4{margin:0 0 8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.rcard.hero{border-color:var(--accent);background:linear-gradient(180deg,rgba(46,230,197,.10),rgba(46,230,197,0) 70%),var(--panel)}
+.bigrx{font:700 1.5rem var(--mono);letter-spacing:-.01em;word-break:break-word}
+.chip{display:inline-block;font-size:.8rem;font-weight:700;border-radius:999px;padding:3px 10px;margin:6px 6px 0 0;border:1px solid var(--line);background:var(--panel2)}
+.chip.ac{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip.warn{color:var(--warn);border-color:rgba(255,194,75,.5)}
+.chip.bad{color:var(--bad);border-color:rgba(255,107,129,.5)}
+ol.steps{margin:0;padding-left:1.3em;font-size:.95rem}
+ol.steps li{margin:3px 0}
+.mono{font-family:var(--mono)}
+.pname{font-family:var(--serif);font-size:1.2rem;font-weight:700;margin:0}
+.pmeta{color:var(--muted);font-size:.9rem;margin:2px 0 8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:.95rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--mono);font-weight:600}
+ul.flags{margin:6px 0 0;padding-left:1.2em;font-size:.93rem}
+ul.flags li{margin:3px 0}
+ul.flags li.w{color:var(--warn)} ul.flags li.b{color:var(--bad)}
+.muted{color:var(--muted)}
+.empty{color:var(--muted);font-style:italic}
+details.ref{margin-top:16px}
+details.ref summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+/* tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--panel2);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+tbody tr:nth-child(even){background:#121218}
+td.n{font-family:var(--mono);white-space:nowrap}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+.b-tld{background:rgba(255,194,75,.15);color:var(--warn)} .b-disc{background:rgba(255,107,129,.15);color:var(--bad)}
+.b-cust{background:rgba(46,230,197,.15);color:var(--accent)} .b-lim{background:rgba(255,194,75,.15);color:var(--warn)}
+.cov{font-weight:700;color:var(--accent);white-space:nowrap}
+.notes{color:var(--muted);font-size:.85rem;min-width:260px}
+#btable{min-width:1150px}
+.notes .uv{color:var(--warn);font-weight:700}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.filters input[type=search]{min-height:44px;flex:1 1 220px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);padding:0 14px;font-size:1rem}
+.tog{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font:600 .9rem var(--sans);cursor:pointer}
+.tog[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.count{color:var(--muted);font-size:.9rem}
+/* guides */
+.guides{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+@media (max-width:420px){.guides{grid-template-columns:1fr}}
+.guide h3{margin-bottom:4px}
+.guide .gm{color:var(--muted);font-size:.85rem;margin:0 0 10px}
+.guide dl{margin:0}
+.guide dt{font-weight:700;color:var(--accent);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;margin-top:10px}
+.guide dd{margin:4px 0 0;font-size:.95rem}
+.guide ul{margin:4px 0 0;padding-left:1.2em}
+.guide li{margin:3px 0}
+.ex{display:grid;gap:14px}
+.ex .card pre{white-space:pre-wrap;font:.88rem/1.5 var(--mono);background:var(--panel2);border-radius:10px;padding:12px;margin:10px 0 0;overflow-x:auto}
+footer{border-top:1px solid var(--line);margin-top:30px;padding:18px 0 40px;color:var(--muted);font-size:.95rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>CL</b> Rx Converter</div>
+    <nav aria-label="Sections">
+      <a href="#calc">Calculator</a>
+      <a href="#brands"><span class="l">Brand Table</span><span class="s">Brands</span></a>
+      <a href="#guides"><span class="l">Multifocal Guides</span><span class="s">MF Guides</span></a>
+      <a href="#examples">Examples</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section id="calc" class="wrap" aria-labelledby="calc-h">
+  <h1 id="calc-h">Glasses Rx to starting contact lens</h1>
+  <p class="lede">Type the glasses Rx. Results update as you type. Every step is shown so you can check the math. Nothing you type leaves this page or is saved.</p>
+
+  <div class="card">
+    <div class="settings">
+      <div class="field">
+        <label for="vd">Vertex distance (mm)</label>
+        <input id="vd" class="plain" inputmode="decimal" value="12" aria-describedby="vd-help">
+        <span id="vd-help" class="sr">Default 12 millimetres</span>
+      </div>
+      <fieldset class="field" style="border:0;padding:0;margin:0">
+        <legend class="legend">Dominant eye</legend>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="dom" id="dom-od" value="OD" checked><label for="dom-od">OD</label>
+          <input type="radio" name="dom" id="dom-os" value="OS"><label for="dom-os">OS</label>
+        </div>
+      </fieldset>
+      <fieldset class="field" style="border:0;padding:0;margin:0">
+        <legend class="legend">Lens preference</legend>
+        <div class="seg">
+          <input type="radio" name="pref" id="pref-d" value="daily"><label for="pref-d">Daily</label>
+          <input type="radio" name="pref" id="pref-m" value="monthly"><label for="pref-m">Monthly</label>
+          <input type="radio" name="pref" id="pref-n" value="none" checked><label for="pref-n">No preference</label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="grid2" id="eyes"></div>
+    <p class="err" id="formerr" role="alert"></p>
+
+    <div class="actions">
+      <button class="btn primary" id="copy" type="button"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy chart note</button>
+      <button class="btn" type="button" data-ex="0">Example 1</button>
+      <button class="btn" type="button" data-ex="1">Example 2</button>
+      <button class="btn" type="button" data-ex="2">Example 3</button>
+      <button class="btn" id="clear" type="button"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>Clear</button>
+      <span class="toast" id="toast" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <div class="results" id="results" aria-live="off"></div>
+
+  <details class="ref card">
+    <summary>Vertex conversion reference table (12 mm)</summary>
+    <p class="muted">F<sub>CL</sub> = F / (1 − d·F), d = 0.012 m. Rounded to the nearest 0.25 D; ties go to less minus / more plus. Below about ±4.00 D the change is under 0.25 D, so the glasses power carries over.</p>
+    <div class="tablewrap"><table id="vtable"></table></div>
+  </details>
+</section>
+
+<section id="brands" class="wrap" aria-labelledby="brands-h">
+  <h2 id="brands-h">Brand table</h2>
+  <p class="lede">Built from ODspecs (read 19 Nov 2026), corrected with manufacturer values where they disagree. With an Rx entered, only products that cover the converted Rx are shown. "Covers" means the exact lens power, cylinder and axis in the calculator exist for that product.</p>
+  <div class="filters">
+    <label class="sr" for="q">Search brands</label>
+    <input type="search" id="q" placeholder="Search maker or product">
+    <button class="tog" type="button" data-f="daily" aria-pressed="false">Daily</button>
+    <button class="tog" type="button" data-f="monthly" aria-pressed="false">Monthly</button>
+    <button class="tog" type="button" data-f="toric" aria-pressed="false">Toric</button>
+    <button class="tog" type="button" data-f="mf" aria-pressed="false">Multifocal</button>
+    <button class="tog" type="button" data-f="mft" aria-pressed="false">MF toric</button>
+    <button class="tog" type="button" id="showall" aria-pressed="false">Show all</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="tablewrap"><table id="btable"></table></div>
+</section>
+
+<section id="guides" class="wrap" aria-labelledby="guides-h">
+  <h2 id="guides-h">Multifocal fitting guides</h2>
+  <p class="lede">Each card summarizes the manufacturer's own guide. The calculator uses these mappings. It never copies the glasses ADD 1:1.</p>
+  <div class="guides" id="gcards"></div>
+</section>
+
+<section id="examples" class="wrap" aria-labelledby="ex-h">
+  <h2 id="ex-h">Worked examples</h2>
+  <p class="lede">Tap "Load" to fill the calculator. The math below is computed by the same code as the calculator.</p>
+  <div class="ex" id="excards"></div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Starting trial lens tool for personal clinical use. The fitting doctor verifies the final prescription on eye.</strong></p>
+    <p>Sources: <a href="https://odspecs.com/" rel="noopener noreferrer" target="_blank">ODspecs</a> and the manufacturer guides linked in Multifocal Guides. Data checked 19 Nov 2026. Items marked UNVERIFIED could not be confirmed from those sources.</p>
+  </div>
+</footer>
+
+<script id="engine">
+/* ===== Engine: pure functions, no DOM. Tested from Node. ===== */
+const E = (() => {
+const EPS = 1e-9;
+const range = (a, b, s) => { const o = []; for (let v = a; v <= b + EPS; v += s) o.push(Math.round(v * 100) / 100); return o; };
+const A10 = range(10, 180, 10), A5 = range(5, 180, 5), A1 = range(1, 180, 1);
+const LIM = [10, 20, 70, 80, 90, 100, 110, 160, 170, 180];
+const LIM5 = [10, 20, 160, 170, 180];
+const LIM60 = [10, 20, 60, 70, 80, 90, 100, 110, 120, 160, 170, 180];
+const LIM90 = [10, 20, 90, 160, 170, 180];
+const LIMBTP = [10, 20, 80, 90, 100, 160, 170, 180];
+const C4 = [-0.75, -1.25, -1.75, -2.25], C5 = [-0.75, -1.25, -1.75, -2.25, -2.75], C3 = [-0.75, -1.25, -1.75];
+const CXR = [-2.75, -3.25, -3.75, -4.25, -4.75, -5.25, -5.75];
+const CBTMF = [-0.75, -1.25, -1.75, -2.25, -2.75, -3.25, -3.75, -4.25, -4.75, -5.25, -5.75];
+
+// Sphere grid: 0.25 steps from -m25 to +p25, 0.50 steps beyond, out to min/max.
+// minAbs drops plano (and ±0.25 when 0.5) for lenses that do not make them.
+function g(min, max, m25, p25, minAbs = 0) {
+  const s = [];
+  if (min < -m25) s.push([min, -m25 - 0.5, 0.5]);
+  s.push([Math.max(min, -m25), Math.min(max, p25), 0.25]);
+  if (max > p25) s.push([p25 + 0.5, max, 0.5]);
+  if (minAbs) s.minAbs = minAbs;
+  return s;
+}
+const pwCache = new Map();
+function powers(segs) {
+  if (pwCache.has(segs)) return pwCache.get(segs);
+  const set = new Set();
+  for (const [a, b, st] of segs) {
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    for (const v of range(lo, hi, st)) if (!(segs.minAbs && Math.abs(v) < segs.minAbs - EPS)) set.add(v);
+  }
+  const L = [...set].sort((x, y) => x - y);
+  pwCache.set(segs, L);
+  return L;
+}
+
+/* ---------- Product data (ODspecs, manufacturer corrections noted) ---------- */
+const P = [
+// Alcon
+{id:'aohg',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde',ty:['sph'],mod:'monthly',dk:110,bc:'8.6',dia:'14.2',st:'current',sph:g(-12,8,8,6,0.25),notes:['EW up to 6 nights per ODspecs.']},
+{id:'aohgt',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde for Astigmatism',ty:['toric'],mod:'monthly',dk:110,bc:'8.7',dia:'14.5',st:'current',bands:[{s:g(-10,6,6,6),c:C4,ax:A10}]},
+{id:'aomf',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde Multifocal',ty:['mf'],mod:'monthly',dk:110,bc:'8.6',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam'},
+{id:'aond',mk:'Alcon',nm:'AIR OPTIX NIGHT & DAY AQUA',ty:['sph'],mod:'monthly',dk:140,bc:'8.4 / 8.6',dia:'13.8',st:'current',sph:g(-10,6,8,6)},
+{id:'dacp',mk:'Alcon',nm:'DAILIES AquaComfort Plus',ty:['sph'],mod:'daily',dk:26,bc:'8.7',dia:'14.0',st:'current',sph:g(-15,8,6,6,0.5)},
+{id:'dacpt',mk:'Alcon',nm:'DAILIES AquaComfort Plus Toric',ty:['toric'],mod:'daily',dk:26,bc:'8.8',dia:'14.4',st:'limited',bands:[{s:g(-8,4,6,4),c:C3,ax:LIM}],notes:['ODspecs: trial lenses discontinued, "some availability".','ODspecs disagrees with itself: main table +4 to −9, toric table and detail page +4 to −8. −8 used.']},
+{id:'dacpmf',mk:'Alcon',nm:'DAILIES AquaComfort Plus Multifocal',ty:['mf'],mod:'daily',dk:26,bc:'8.7',dia:'14.0',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam',notes:['UNVERIFIED: sphere step size not stated on ODspecs; 0.25 D assumed.']},
+{id:'dt1',mk:'Alcon',nm:'DAILIES TOTAL1',ty:['sph'],mod:'daily',dk:140,bc:'8.5',dia:'14.1',st:'current',sph:g(-12,6,6,6,0.5)},
+{id:'dt1t',mk:'Alcon',nm:'DAILIES TOTAL1 for Astigmatism',ty:['toric'],mod:'daily',dk:140,bc:'8.6',dia:'14.5',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},
+  {s:[[0.5,4,0.25],[-8,-6.5,0.5]],c:C3,ax:LIM},{s:[[0.5,4,0.25],[-8,-6.5,0.5]],c:[-2.25],ax:LIM5}]},
+{id:'dt1mf',mk:'Alcon',nm:'DAILIES TOTAL1 Multifocal',ty:['mf'],mod:'daily',dk:140,bc:'8.5',dia:'14.1',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam'},
+{id:'p1',mk:'Alcon',nm:'PRECISION1',ty:['sph'],mod:'daily',dk:90,bc:'8.3',dia:'14.2',st:'current',sph:g(-12,8,6,6,0.5)},
+{id:'p1t',mk:'Alcon',nm:'PRECISION1 for Astigmatism',ty:['toric'],mod:'daily',dk:90,bc:'8.5',dia:'14.5',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25,-2.75],ax:LIM},
+  {s:[[0.25,4,0.25],[4.5,6,0.5],[-10,-6.5,0.5]],c:C3,ax:LIM},{s:[[0.25,4,0.25],[4.5,6,0.5],[-10,-6.5,0.5]],c:[-2.25,-2.75],ax:LIM5}]},
+{id:'p7',mk:'Alcon',nm:'PRECISION7',ty:['sph'],mod:'1wk',dk:119,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,8,6)},
+{id:'p7t',mk:'Alcon',nm:'PRECISION7 for Astigmatism',ty:['toric'],mod:'1wk',dk:119,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C5,ax:A10}]},
+{id:'t30',mk:'Alcon',nm:'TOTAL30',ty:['sph'],mod:'monthly',dk:123,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,8,6,0.25)},
+{id:'t30t',mk:'Alcon',nm:'TOTAL30 for Astigmatism',ty:['toric'],mod:'monthly',dk:123,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C5,ax:A10}]},
+{id:'t30mf',mk:'Alcon',nm:'TOTAL30 Multifocal',ty:['mf'],mod:'monthly',dk:123,bc:'8.4',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'alcon',notes:['Range confirmed by Alcon PFIG: +6.00 to −10.00 in 0.25 D steps.']},
+{id:'t30mfa',mk:'Alcon',nm:'TOTAL30 Multifocal for Astigmatism',ty:['mft'],mod:'monthly',dk:123,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-6,4,6,4),c:C3,ax:A10}],add:'alcon',addFlag:'t30mfa',notes:['ODspecs lists ADDs Low (1.25), Med (2.00), Hi (2.50).']},
+// Bausch + Lomb
+{id:'bt1',mk:'Bausch + Lomb',nm:'Biotrue ONEday',ty:['sph'],mod:'daily',dk:42,bc:'8.6',dia:'14.2',st:'current',sph:g(-12,6,6.5,6,0.25)},
+{id:'bt1t',mk:'Bausch + Lomb',nm:'Biotrue ONEday for Astigmatism',ty:['toric'],mod:'daily',dk:42,bc:'8.4',dia:'14.5',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},{s:[[-6,0,0.5]],c:[-2.75],ax:LIM90},
+  {s:[[-9,-6.5,0.5]],c:C3,ax:LIM60},{s:[[-9,-6.5,0.5]],c:[-2.25],ax:LIM90},
+  {s:[[0.25,4,0.25]],c:C3,ax:LIM},{s:[[0.25,4,0.25]],c:[-2.25],ax:LIMBTP}]},
+{id:'bt1p',mk:'Bausch + Lomb',nm:'Biotrue ONEday for Presbyopia',ty:['mf'],mod:'daily',dk:42,bc:'8.6',dia:'14.2',st:'current',sph:g(-9,6,9,6),add:'bl',notes:['ODspecs disagrees with itself: detail page +6.00 to −9.00 (0.25), multifocal table +3 to −6. Detail page used. UNVERIFIED with B+L.']},
+{id:'inf',mk:'Bausch + Lomb',nm:'INFUSE One-Day',ty:['sph'],mod:'daily',dk:107,bc:'8.6',dia:'14.2',st:'current',sph:g(-12,6,6,6)},
+{id:'inft',mk:'Bausch + Lomb',nm:'INFUSE One-Day for Astigmatism',ty:['toric'],mod:'daily',dk:107,bc:'8.6',dia:'14.5',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25,-2.75],ax:LIM},
+  {s:[[-8,-6.5,0.5],[0.25,4,0.25]],c:C3,ax:LIM}]},
+{id:'infmf',mk:'Bausch + Lomb',nm:'INFUSE Multifocal',ty:['mf'],mod:'daily',dk:107,bc:'8.6',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'bl',notes:['Range confirmed by B+L product page: +6.00 to −10.00 in 0.25 D steps incl. plano.']},
+{id:'ult',mk:'Bausch + Lomb',nm:'ULTRA (monthly)',ty:['sph'],mod:'monthly',dk:114,bc:'8.5',dia:'14.2',st:'current',sph:g(-12,6,6,6)},
+{id:'ultt',mk:'Bausch + Lomb',nm:'ULTRA for Astigmatism',ty:['toric'],mod:'monthly',dk:114,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-9,6,6,6),c:C5,ax:A10}]},
+{id:'ultp',mk:'Bausch + Lomb',nm:'ULTRA for Presbyopia',ty:['mf'],mod:'monthly',dk:114,bc:'8.5',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'bl',notes:['Range confirmed by B+L ULTRA for Presbyopia fitting guide.']},
+{id:'ultmfa',mk:'Bausch + Lomb',nm:'ULTRA Multifocal for Astigmatism',ty:['mft'],mod:'monthly',dk:114,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-6,4,6,4),c:C5,ax:A10}],add:'bl',notes:['Disagreement: ODspecs limits −2.25/−2.75 cyl to axes 10, 20, 70–110, 160–180. B+L product page lists axes 10°–180° in 10° steps. Manufacturer value used.']},
+{id:'sfd',mk:'Bausch + Lomb',nm:'SofLens daily disposable',ty:['sph'],mod:'daily',dk:22,bc:'8.6',dia:'14.2',st:'current',sph:g(-9,6.5,6.5,6.5),notes:['UNVERIFIED: plus-side step size not stated on ODspecs.']},
+{id:'pv2',mk:'Bausch + Lomb',nm:'PureVision2',ty:['sph'],mod:'monthly',dk:91,bc:'8.6',dia:'14.0',st:'tld',sph:g(-12,6,6,6)},
+{id:'pv2t',mk:'Bausch + Lomb',nm:'PureVision2 for Astigmatism',ty:['toric'],mod:'monthly',dk:91,bc:'8.9',dia:'14.5',st:'tld',bands:[{s:g(-9,6,6,6),c:C4,ax:A10}],notes:['ODspecs toric table says Pl to −9; detail page +6 to −9. Detail used.']},
+{id:'pv2p',mk:'Bausch + Lomb',nm:'PureVision2 for Presbyopia',ty:['mf'],mod:'monthly',dk:91,bc:'8.6',dia:'14.0',st:'tld',sph:g(-10,6,10,6),add:'odsLH',notes:['ADDs per ODspecs: Low to +1.50, High to +2.50.']},
+{id:'sft',mk:'Bausch + Lomb',nm:'SofLens Toric',ty:['toric'],mod:'2wk',dk:32,bc:'8.5',dia:'14.5',st:'tld',bands:[{s:g(-9,6,6,6),c:C4,ax:A10},{s:[[-9,-6.5,0.5],[-6,0,0.25]],c:[-2.75],ax:A10}]},
+{id:'sfmf',mk:'Bausch + Lomb',nm:'SofLens Multifocal',ty:['mf'],mod:'2wk',dk:8.5,bc:'8.5 / 8.8',dia:'14.5',st:'tld',sph:g(-7,6,7,6),add:'odsLH',notes:['UNVERIFIED: step size not stated. ADDs per ODspecs: Low up to +1.50, High +1.75 and up.']},
+{id:'rev',mk:'Bausch + Lomb',nm:'Revive custom soft (sph / toric / MF / MF toric)',ty:['sph','toric','mf','mft'],mod:'quarterly',dk:21,bc:'6.5–9.7 (0.1 mm)',dia:'10.0–16.0',st:'custom',custom:true,
+  sph:[[-30,30,0.25]],bands:[{s:[[-30,30,0.25]],c:range(0.5,10,0.25).map(v=>-v),ax:A1}],add:'revive',notes:['Lathe-cut, made to order. Cyl −0.50 to −10.00 (0.25), ADD +0.50 to +3.00 (0.25), near zone 1.8–3.0 mm.','UNVERIFIED: no Revive fitting guide was read. BC/DIA/ADD are set with the lab.']},
+{id:'ker',mk:'Bausch + Lomb',nm:'Kerasoft Thin (MTO)',ty:['toric'],mod:'quarterly',dk:60,bc:'7.4–9.4',dia:'14.0–15.5',st:'custom',tableOnly:true,dispSph:'+30.00 to −30.00 (0.25)',dispCyl:'to −15.00, 1° axes',notes:['Specialty lens for irregular corneas. Not auto-matched.']},
+// CooperVision
+{id:'av',mk:'CooperVision',nm:'Avaira Vitality',ty:['sph'],mod:'2wk',dk:90,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,6,6,0.25)},
+{id:'avt',mk:'CooperVision',nm:'Avaira Vitality Toric',ty:['toric'],mod:'2wk',dk:90,bc:'8.5',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C4,ax:A10}],notes:['UNVERIFIED: sphere step pattern not on ODspecs detail page; 0.50 D beyond ±6.00 assumed.']},
+{id:'bf',mk:'CooperVision',nm:'Biofinity (incl. XR)',ty:['sph'],mod:'monthly',dk:128,bc:'8.6',dia:'14.0',st:'current',sph:g(-20,15,6,6)},
+{id:'bfe',mk:'CooperVision',nm:'Biofinity Energys',ty:['sph'],mod:'monthly',dk:128,bc:'8.6',dia:'14.0',st:'current',sph:g(-12,8,6,6,0.25)},
+{id:'bfmf',mk:'CooperVision',nm:'Biofinity multifocal',ty:['mf'],mod:'monthly',dk:128,bc:'8.6',dia:'14.0',st:'current',sph:g(-10,6,6,6),add:'cvbf',notes:['Disagreement: ODspecs multifocal table +6 to −8; ODspecs detail page and CooperVision guide +6.00 to −10.00 (0.50 after −6.00). Manufacturer value used.']},
+{id:'bft',mk:'CooperVision',nm:'Biofinity toric',ty:['toric'],mod:'monthly',dk:128,bc:'8.7',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C4,ax:A10}],notes:['UNVERIFIED: plus-side step beyond +6.00 not stated; 0.50 D assumed.']},
+{id:'bftxr',mk:'CooperVision',nm:'Biofinity toric XR',ty:['toric'],mod:'monthly',dk:128,bc:'8.7',dia:'14.5',st:'current',xr:true,bands:[{s:g(-20,20,6,6),c:CXR,ax:A5},{s:[[8.5,20,0.5],[-20,-10.5,0.5]],c:C4,ax:A5}]},
+{id:'bftmf',mk:'CooperVision',nm:'Biofinity toric multifocal',ty:['mft'],mod:'monthly',dk:128,bc:'8.7',dia:'14.5',st:'current',mto:true,bands:[{s:g(-10,10,6,6),c:CBTMF,ax:A5}],add:'cvbtmf',notes:['Made to order (ODspecs). Ranges confirmed by CooperVision guide.']},
+{id:'c1d',mk:'CooperVision',nm:'clariti 1 day',ty:['sph'],mod:'daily',dk:60,bc:'8.6',dia:'14.1',st:'current',sph:g(-10,8,6,6,0.5)},
+{id:'c1dt',mk:'CooperVision',nm:'clariti 1 day toric',ty:['toric'],mod:'daily',dk:60,bc:'8.6',dia:'14.3',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},
+  {s:[[-9,-6.5,0.5]],c:C3,ax:LIM60},{s:[[-9,-6.5,0.5]],c:[-2.25],ax:LIM90},
+  {s:[[0.25,4,0.25]],c:C3,ax:LIM}]},
+{id:'c1dmf',mk:'CooperVision',nm:'clariti 1 day multifocal 3 Add',ty:['mf'],mod:'daily',dk:60,bc:'8.6',dia:'14.1',st:'current',sph:g(-12,8,10,8),add:'odsLMH'},
+{id:'md',mk:'CooperVision',nm:'MyDay',ty:['sph'],mod:'daily',dk:80,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,6,5)},
+{id:'mdt',mk:'CooperVision',nm:'MyDay toric',ty:['toric'],mod:'daily',dk:80,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C4,ax:A10}]},
+{id:'mdmf',mk:'CooperVision',nm:'MyDay multifocal',ty:['mf'],mod:'daily',dk:80,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,10,8),add:'odsLMH'},
+{id:'pc1',mk:'CooperVision',nm:'Proclear 1 day',ty:['sph'],mod:'daily',dk:27,bc:'8.7 (8.6 plus)',dia:'14.2',st:'current',sph:g(-12,8,6,5)},
+{id:'pc1mf',mk:'CooperVision',nm:'Proclear 1 day multifocal',ty:['mf'],mod:'daily',dk:27,bc:'8.7',dia:'14.2',st:'current',tableOnly:true,dispSph:'+6.00 to −10.00 (0.50 over ±6.00)',dispAdd:'Single ADD',notes:['Single ADD design. No CooperVision guide read, so not auto-matched (UNVERIFIED mapping).']},
+{id:'pcs',mk:'CooperVision',nm:'Proclear Sphere',ty:['sph'],mod:'monthly',dk:21,bc:'8.2 / 8.6',dia:'14.2',st:'tld',sph:g(-20,20,6,6)},
+{id:'pct',mk:'CooperVision',nm:'Proclear Toric',ty:['toric'],mod:'monthly',dk:21,bc:'8.4 / 8.8',dia:'14.4',st:'tld',bands:[{s:g(-8,6,6.5,6),c:C4,ax:A10}]},
+{id:'pcmf',mk:'CooperVision',nm:'Proclear Multifocal (D/N)',ty:['mf'],mod:'monthly',dk:21,bc:'8.7',dia:'14.4',st:'tld',tableOnly:true,dispSph:'+6.00 to −8.00',dispAdd:'+1.00, +1.50, +2.00, +2.50 (D/N)',notes:['Trial lenses discontinued Nov 1, 2026 (ODspecs). No Proclear guide read.']},
+{id:'pcmfxr',mk:'CooperVision',nm:'Proclear Multifocal XR',ty:['mf'],mod:'monthly',dk:21,bc:'8.7',dia:'14.4',st:'disc',tableOnly:true,dispSph:'+6.25 to +20.00, −8.50 to −20.00',dispAdd:'+1.00 to +4.00 (0.50)'},
+{id:'pcmft',mk:'CooperVision',nm:'Proclear Multifocal Toric',ty:['mft'],mod:'monthly',dk:21,bc:'8.4 / 8.8',dia:'14.4',st:'disc',tableOnly:true,dispSph:'+20.00 to −20.00',dispCyl:'−0.75 to −5.75 (0.50), 5° axes',dispAdd:'+1.00 to +4.00 (0.50)',notes:['ODspecs: discontinued Nov 1, 2026.']},
+{id:'pctxr',mk:'CooperVision',nm:'Proclear Toric XR',ty:['toric'],mod:'monthly',dk:21,bc:'8.4 / 8.8',dia:'14.4',st:'disc',tableOnly:true,dispSph:'+10.00 to −10.00',dispCyl:'−0.75 to −5.75, 5° axes'},
+{id:'bmt',mk:'CooperVision',nm:'Biomedics toric',ty:['toric'],mod:'2wk',dk:20,bc:'8.7',dia:'14.5',st:'disc',tableOnly:true,dispSph:'+6.00 to −9.00',dispCyl:'−0.75 to −2.25, 10° axes'},
+{id:'mis',mk:'CooperVision',nm:'MiSight 1 day',ty:['sph'],mod:'daily',dk:27,bc:'8.7',dia:'14.2',st:'current',tableOnly:true,dispSph:'−0.50 to −7.00',notes:['Myopia control lens. Not used for routine conversion.']},
+// J&J Acuvue
+{id:'m1d',mk:'J&J Acuvue',nm:'1-DAY ACUVUE MOIST',ty:['sph'],mod:'daily',dk:21,bc:'8.5 / 9.0',dia:'14.2',st:'current',sph:g(-12,6,6,6,0.5)},
+{id:'m1dt',mk:'J&J Acuvue',nm:'1-DAY ACUVUE MOIST for Astigmatism',ty:['toric'],mod:'daily',dk:21,bc:'8.5',dia:'14.5',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},{s:[[-9,-6.5,0.5],[0.25,4,0.25]],c:C3,ax:LIM}]},
+{id:'m1dmf',mk:'J&J Acuvue',nm:'1-DAY ACUVUE MOIST MULTIFOCAL',ty:['mf'],mod:'daily',dk:21,bc:'8.4',dia:'14.3',st:'current',sph:g(-9,6,9,6),add:'jj',notes:['ODspecs lists Dk 21 (main) and 28 (multifocal table).']},
+{id:'ao',mk:'J&J Acuvue',nm:'ACUVUE OASYS (2-Week)',ty:['sph'],mod:'2wk',dk:103,bc:'8.4 / 8.8',dia:'14.0',st:'current',sph:g(-12,8,6,6,0.5)},
+{id:'aot',mk:'J&J Acuvue',nm:'ACUVUE OASYS for Astigmatism (2-Week)',ty:['toric'],mod:'2wk',dk:103,bc:'8.6',dia:'14.5',st:'current',bands:[{s:[[-6,6,0.25],[-9,-6.5,0.5]],c:C5,ax:A10}]},
+{id:'aomf2',mk:'J&J Acuvue',nm:'ACUVUE OASYS MULTIFOCAL (2-Week)',ty:['mf'],mod:'2wk',dk:103,bc:'8.4',dia:'14.3',st:'current',sph:g(-9,6,9,6),add:'jj'},
+{id:'ao1',mk:'J&J Acuvue',nm:'ACUVUE OASYS 1-Day',ty:['sph'],mod:'daily',dk:103,bc:'8.5 / 9.0',dia:'14.3',st:'current',sph:g(-12,8,6,6,0.5)},
+{id:'ao1t',mk:'J&J Acuvue',nm:'ACUVUE OASYS 1-Day for Astigmatism',ty:['toric'],mod:'daily',dk:103,bc:'8.5',dia:'14.3',st:'current',bands:[{s:[[-6,0,0.25]],c:C5,ax:A10},{s:[[-9,-6.5,0.5],[0.25,4,0.25]],c:C5,ax:LIM}]},
+{id:'amx',mk:'J&J Acuvue',nm:'ACUVUE OASYS MAX 1-Day',ty:['sph'],mod:'daily',dk:103,bc:'8.5 / 9.0',dia:'14.3',st:'current',sph:g(-12,8,6,6,0.5)},
+{id:'amxt',mk:'J&J Acuvue',nm:'ACUVUE OASYS MAX 1-Day for Astigmatism',ty:['toric'],mod:'daily',dk:103,bc:'8.5',dia:'14.3',st:'current',bands:[
+  {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},{s:[[-9,-6.5,0.5],[0.25,4,0.25]],c:C3,ax:LIM}]},
+{id:'amxmf',mk:'J&J Acuvue',nm:'ACUVUE OASYS MAX 1-Day MULTIFOCAL',ty:['mf'],mod:'daily',dk:103,bc:'8.4',dia:'14.3',st:'current',sph:g(-9,6,9,6),add:'jj'},
+{id:'amxmft',mk:'J&J Acuvue',nm:'ACUVUE OASYS MAX 1-Day MULTIFOCAL for ASTIGMATISM',ty:['mft'],mod:'daily',dk:103,bc:'8.5',dia:'14.3',st:'current',bands:[{s:[[-9,6,0.25]],c:[-1.00],ax:LIM}],cylFits:[-1.75,-0.75],add:'jj',notes:['Single cyl −1.00. J&J: designed for refractive cyl −0.75 to −1.75 (sphere may compensate).']},
+{id:'vita',mk:'J&J Acuvue',nm:'ACUVUE VITA',ty:['sph'],mod:'monthly',dk:103,bc:'8.4 / 8.8',dia:'14.0',st:'current',sph:g(-12,8,6,6,0.5)},
+{id:'vitat',mk:'J&J Acuvue',nm:'ACUVUE VITA for Astigmatism',ty:['toric'],mod:'monthly',dk:103,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-9,6,6,6),c:C5,ax:A10}]},
+{id:'abil',mk:'J&J Acuvue',nm:'ACUVUE Abiliti 1-Day',ty:['sph'],mod:'daily',dk:103,bc:'7.9',dia:'13.8',st:'current',tableOnly:true,dispSph:'−0.25 to −8.00',notes:['Myopia management lens. Not used for routine conversion.']},
+// Specialty / other makers listed on ODspecs
+{id:'mirut',mk:'Menicon',nm:'Miru 1month Menicon Toric',ty:['toric'],mod:'monthly',dk:129,bc:'8.6',dia:'14.0',st:'current',bands:[{s:g(-10,0,6,0),c:C3,ax:A10}]},
+{id:'miru1dt',mk:'Menicon',nm:'Miru 1day Flat Pack Toric',ty:['toric'],mod:'daily',dk:23,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-8,2,6,2),c:[-0.75,-1.25],ax:[15,90,165,180]},{s:g(-8,2,6,2),c:[-1.75],ax:[180]}],notes:['ODspecs disagrees with itself on BC (8.4 toric table, 8.6 detail). Detail used.']},
+{id:'mirumf',mk:'Menicon',nm:'Miru 1month Menicon Multifocal',ty:['mf'],mod:'monthly',dk:129,bc:'8.6',dia:'14.2',st:'current',tableOnly:true,dispSph:'+6.00 to −13.00',dispAdd:'"Low", "High"',notes:['No Menicon guide read; ADD ranges not listed. Not auto-matched (UNVERIFIED).']},
+{id:'nv',mk:'VTI',nm:'NaturalVue Multifocal 1 Day',ty:['mf'],mod:'daily',dk:20,bc:'8.3',dia:'14.5',st:'current',tableOnly:true,dispSph:'+4.00 to −12.25',dispAdd:'Single (center distance)',notes:['No VTI guide read. Not auto-matched (UNVERIFIED mapping).']},
+{id:'sdm',mk:'SynergEyes',nm:'Duette Multifocal (hybrid)',ty:['mf'],mod:'6 mo',dk:130,bc:'7.1–8.3',dia:'14.5',st:'custom',tableOnly:true,dispSph:'+5.50 to −10.00',dispAdd:'+2.50',notes:['Hybrid specialty lens: referral / specialty fitting.']},
+{id:'sdp',mk:'SynergEyes',nm:'Duette Progressive (hybrid)',ty:['mf'],mod:'6 mo',dk:130,bc:'7.1–8.3',dia:'14.5',st:'custom',tableOnly:true,dispSph:'+5.50 to −10.00',dispAdd:'+1.00, +1.75, +2.50'},
+{id:'smf',mk:'SynergEyes',nm:'SynergEyes Multifocal (hybrid)',ty:['mf'],mod:'6 mo',dk:100,bc:'7.1–8.0',dia:'14.5',st:'custom',tableOnly:true,dispSph:'+4.00 to −9.00',dispAdd:'+1.25, +1.75, +2.25'},
+];
+
+/* ---------- Multifocal ADD mapping, each from the maker's own guide ---------- */
+const between = (x, a, b) => x >= a - EPS && x <= b + EPS;
+const ADD = {
+  // Alcon TOTAL30 PFIG table "Spectacle ADD / Both eyes"
+  alcon(add) {
+    if (add <= 1.25 + EPS) return { lens: 'LO', rule: 'Spectacle ADD up to +1.25 → LO, both eyes' };
+    if (add <= 2.00 + EPS) return { lens: 'MED', rule: 'Spectacle ADD +1.50 to +2.00 → MED, both eyes' };
+    if (add <= 2.50 + EPS) return { lens: 'HI', rule: 'Spectacle ADD +2.25 to +2.50 → HI, both eyes' };
+    return { err: 'ADD above +2.50 is outside the Alcon guide table' };
+  },
+  // B+L 2-step guide "Spectacle ADD / Both eyes"
+  bl(add) {
+    if (add < 0.75 - EPS) return { err: 'ADD below +0.75 is outside the B+L guide table' };
+    if (add <= 1.50 + EPS) return { lens: 'Low', rule: 'Spectacle ADD +0.75 to +1.50 → Low, both eyes' };
+    if (add <= 2.50 + EPS) return { lens: 'High', rule: 'Spectacle ADD +1.75 to +2.50 → High, both eyes' };
+    return { err: 'ADD above +2.50 is outside the B+L guide table' };
+  },
+  // J&J AOMAX package insert + ACUVUE MF Fit Guide
+  jj(add, dom) {
+    if (add < 0.75 - EPS) return { err: 'ADD below +0.75 is outside the ACUVUE guide table' };
+    if (add <= 1.25 + EPS) return { lens: 'LOW', rule: 'ADD +0.75 to +1.25 → LOW on each eye' };
+    if (add <= 1.75 + EPS) return { lens: 'MID', rule: 'ADD +1.50 to +1.75 → MID on each eye' };
+    if (add <= 2.50 + EPS) return dom ? { lens: 'MID', rule: 'ADD +2.00 to +2.50 → MID on dominant eye' } : { lens: 'HIGH', rule: 'ADD +2.00 to +2.50 → HIGH on non-dominant eye' };
+    return { err: 'ADD above +2.50 is outside the ACUVUE guide table' };
+  },
+  // CooperVision Biofinity multifocal guide: ADD 1.00/1.50 D+D, 2.00/2.50 D(dom)+N(non-dom); "choose the lower ADD power when possible"
+  cvbf(add, dom) {
+    if (add < 0.75 - EPS) return { err: 'ADD below +0.75: the lowest Biofinity multifocal ADD is +1.00' };
+    if (add > 2.50 + EPS) return { err: 'ADD above +2.50: the guide gives no rule beyond its +2.50 lens' };
+    let a = add >= 2.50 - EPS ? 2.5 : add >= 2.0 - EPS ? 2.0 : add >= 1.5 - EPS ? 1.5 : 1.0;
+    const notes = [];
+    if (Math.abs(a - add) > EPS) notes.push(`Lens ADD +${a.toFixed(2)} for spectacle ADD +${add.toFixed(2)}: guide says choose the lower ADD when possible`);
+    const design = a <= 1.5 ? 'D' : (dom ? 'D' : 'N');
+    return { lens: `+${a.toFixed(2)} ${design}`, rule: `ADD +${a.toFixed(2)} → ${a <= 1.5 ? 'D lens both eyes' : 'D lens dominant, N lens non-dominant'}`, notes };
+  },
+  // CooperVision Biofinity toric multifocal guide: explicit spectacle-ADD table; dominant eye always D
+  cvbtmf(add, dom) {
+    if (add < 0.75 - EPS) return { err: 'ADD below +0.75 is outside the Biofinity toric multifocal table' };
+    let a, nd;
+    if (add <= 1.25 + EPS) { a = 1.0; nd = 'D'; }
+    else if (add <= 1.75 + EPS) { a = 1.5; nd = 'D'; }
+    else if (add <= 2.25 + EPS) { a = 2.0; nd = 'N'; }
+    else { a = 2.5; nd = 'N'; }
+    const design = dom ? 'D' : nd;
+    return { lens: `+${a.toFixed(2)} ${design}`, rule: `Spectacle ADD +${add.toFixed(2)} → ADD +${a.toFixed(2)}; dominant D, non-dominant ${nd}`, notes: add > 2.5 + EPS ? ['Table row "+2.50 or above" used'] : [] };
+  },
+  // No manufacturer guide found: ADD bands as listed on ODspecs for the product
+  odsLMH(add) {
+    const n = ['No CooperVision fitting guide found for this lens: ADD band from the ODspecs listing (UNVERIFIED method)'];
+    if (between(add, 0.75, 1.25)) return { lens: 'Low', rule: 'ODspecs: Low +0.75 to +1.25', notes: n, uv: true };
+    if (between(add, 1.5, 1.75)) return { lens: 'Med', rule: 'ODspecs: Med +1.50 to +1.75', notes: n, uv: true };
+    if (between(add, 2.0, 2.5)) return { lens: 'High', rule: 'ODspecs: High +2.00 to +2.50', notes: n, uv: true };
+    return { err: 'ADD outside the ODspecs-listed ranges' };
+  },
+  odsLH(add) {
+    const n = ['No guide read for this lens: ADD band from ODspecs (UNVERIFIED method)'];
+    if (between(add, 0.75, 1.50)) return { lens: 'Low', rule: 'ODspecs: Low up to +1.50', notes: n, uv: true };
+    if (between(add, 1.75, 2.50)) return { lens: 'High', rule: 'ODspecs: High +1.75 and up', notes: n, uv: true };
+    return { err: 'ADD outside the ODspecs-listed ranges' };
+  },
+  revive(add) {
+    if (!between(add, 0.5, 3.0)) return { err: 'ADD outside Revive range (+0.50 to +3.00)' };
+    return { lens: `+${add.toFixed(2)} (lab to confirm)`, rule: 'Custom: spectacle ADD sent to the lab for design', notes: ['UNVERIFIED: Revive ADD design is set with the B+L lab; no guide was read'], uv: true };
+  },
+};
+const ADD_FLAGS = {
+  alconFam: 'This lens has its own Alcon guide (PDF not read). ADD table taken from the TOTAL30 Multifocal guide, which uses the same Alcon 3-ADD system (UNVERIFIED for this lens).',
+  t30mfa: 'TOTAL30 Multifocal for Astigmatism guide not read. ADD table taken from the TOTAL30 Multifocal guide (UNVERIFIED for this lens).',
+};
+const GUIDE_OF = { alcon: 'alcon', bl: 'bl', jj: 'jj', cvbf: 'cvbf', cvbtmf: 'cvbtmf', odsLMH: null, odsLH: null, revive: null };
+
+/* ---------- Optics ---------- */
+// Round to 0.25 D. Ties go toward plus: less minus for myopes, more plus for hyperopes.
+const rq = x => { const v = Math.floor(x * 4 + 0.5 + 1e-7) / 4; return v === 0 ? 0 : v; };
+const vtx = (F, dmm) => F / (1 - (dmm / 1000) * F);
+const axNorm = a => { a = ((Math.round(a) % 180) + 180) % 180; return a === 0 ? 180 : a; };
+const axDiff = (a, b) => { const d = Math.abs(a - b) % 180; return Math.min(d, 180 - d); };
+
+function convert(rx, dmm) {
+  let { sph, cyl, ax } = rx; cyl = cyl || 0; ax = cyl ? axNorm(ax) : 180;
+  let transposed = false;
+  if (cyl > 0) { sph = sph + cyl; cyl = -cyl; ax = axNorm(ax + 90); transposed = true; }
+  const m1 = sph, m2 = sph + cyl, ax2 = axNorm(ax + 90);
+  const v1 = vtx(m1, dmm), v2 = vtx(m2, dmm);
+  const cl = { sph: rq(v1), cyl: cyl ? rq(v2 - v1) : 0, ax, se: rq((v1 + v2) / 2) };
+  if (cl.cyl === 0) cl.cyl = 0;
+  const carry = rq(v1) === rq(m1) && rq(v2) === rq(m2);
+  return { sph, cyl, ax, ax2, m1, m2, v1, v2, cylRaw: v2 - v1, seRaw: (v1 + v2) / 2, cl, transposed, carry, dmm };
+}
+
+/* ---------- Matching ---------- */
+function snap(t, L) { let v = null, d = 1e9; for (const x of L) { const e = Math.abs(x - t); if (e < d - EPS || (Math.abs(e - d) < EPS && x > v)) { v = x; d = e; } } return { v, d }; }
+function nearestAxis(a, list) { let v = list[0], d = 1e9; for (const x of list) { const e = axDiff(a, x); if (e < d - EPS) { v = x; d = e; } } return { v, err: d }; }
+
+function matchSphere(segs, t) {
+  const L = powers(segs);
+  if (!L.length || t < L[0] - EPS || t > L[L.length - 1] + EPS) return null;
+  const s = snap(t, L);
+  return s.d <= 0.25 + EPS ? s : null;
+}
+function matchToric(p, need) {
+  let best = null;
+  for (const b of p.bands) {
+    const L = powers(b.s);
+    for (const c of b.c) {
+      const cd = need.cyl - c;
+      const ok = p.cylFits ? between(need.cyl, p.cylFits[0], p.cylFits[1]) : Math.abs(cd) <= 0.25 + EPS;
+      if (!ok) continue;
+      const t = need.sph + cd / 2; // keep the spherical equivalent when the lens cylinder differs
+      if (t < L[0] - 0.125 - EPS || t > L[L.length - 1] + 0.125 + EPS) continue;
+      const s = snap(t, L);
+      if (s.d > 0.25 + EPS) continue;
+      const a = nearestAxis(need.ax, b.ax);
+      const resid = 2 * Math.abs(c) * Math.sin(a.err * Math.PI / 180);
+      const score = Math.abs(cd) * 3 + s.d * 4 + a.err / 5 + (Math.abs(c) > Math.abs(need.cyl) + EPS ? 0.05 : 0);
+      if (!best || score < best.score - EPS) best = { sph: s.v, cyl: c, ax: a.v, axErr: a.err, cylDiff: cd, sphTarget: t, sphDiff: s.v - t, resid, score };
+    }
+  }
+  return best;
+}
+// need: {mode:'sph'|'toric'|'mf'|'mft', sph, cyl, ax, se, add, dom}
+function matchProduct(p, need) {
+  if (p.tableOnly || p.st === 'disc') return { ok: false, why: p.st === 'disc' ? 'Discontinued' : 'Not auto-matched' };
+  if (!p.ty.includes(need.mode)) return { ok: false, why: 'Wrong lens type' };
+  const m = { ok: true, p, notes: [], uv: false };
+  if (need.mode === 'sph' || need.mode === 'mf') {
+    const s = matchSphere(p.sph, need.se);
+    if (!s) return { ok: false, why: 'Sphere out of range' };
+    m.sph = s.v; m.cyl = 0; m.sphDiff = s.v - need.se; m.score = s.d * 4;
+    if (Math.abs(m.sphDiff) > EPS) m.notes.push(`Sphere ${fD(s.v)} is the nearest available power to ${fD(need.se)} (${m.sphDiff > 0 ? 'more plus / less minus' : 'more minus'} by ${Math.abs(m.sphDiff).toFixed(2)} D)`);
+  } else {
+    const t = matchToric(p, need);
+    if (!t) return { ok: false, why: 'Sphere, cylinder or axis not available' };
+    Object.assign(m, t);
+    if (Math.abs(t.cylDiff) > EPS) m.notes.push(`Cylinder ${fD(t.cyl)} instead of ${fD(need.cyl)}: sphere compensated by ${fD(t.cylDiff / 2, 3)} to keep the spherical equivalent → ${fD(t.sphTarget, 3)}`);
+    if (Math.abs(t.sphDiff) > EPS) m.notes.push(`Sphere ${fD(t.sph)} is the nearest available to ${fD(t.sphTarget, 3)}`);
+    if (t.axErr > 0) m.notes.push(`Axis ${pad(t.ax)} is the nearest available to ${pad(need.ax)} (${t.axErr}° off): expected residual cylinder ≈ ${t.resid.toFixed(2)} D (2·C·sin θ). Re-check rotation on eye.`);
+    if (t.axErr > 10) m.big = true;
+  }
+  if (need.mode === 'mf' || need.mode === 'mft') {
+    const a = ADD[p.add](need.add, need.dom, p);
+    if (a.err) return { ok: false, why: a.err };
+    m.add = a; m.notes.push(...(a.notes || []));
+    if (a.uv) m.uv = true;
+    if (p.addFlag) { m.notes.push(ADD_FLAGS[p.addFlag]); m.uv = true; }
+  }
+  if (p.st === 'tld') m.notes.push('ODspecs: trial lenses discontinued');
+  if (p.st === 'limited') m.notes.push('ODspecs: limited availability');
+  if (p.mto) m.notes.push('Made to order');
+  if (p.custom) m.notes.push('Custom lens: order through the lab');
+  return m;
+}
+function rank(m, pref) {
+  const p = m.p;
+  let s = m.score;
+  s += { current: 0, limited: 2, tld: 8, custom: 10 }[p.st] || 0;
+  if (p.xr) s += 2;
+  if (p.mto) s += 1;
+  if (m.uv) s += 1.5;
+  if (pref === 'daily' && p.mod !== 'daily') s += 5;
+  if (pref === 'monthly') { if (p.mod === 'daily') s += 5; else if (p.mod !== 'monthly') s += 1; }
+  s -= p.dk / 2000; // small tie-break toward higher oxygen
+  return s;
+}
+function matchesFor(need, pref) {
+  const out = [];
+  for (const p of P) { const m = matchProduct(p, need); if (m.ok) { m.rank = rank(m, pref); out.push(m); } }
+  return out.sort((a, b) => a.rank - b.rank);
+}
+
+/* ---------- Per-eye analysis ---------- */
+function analyzeEye(eye, rx, ctx) {
+  const vx = convert(rx, ctx.dmm);
+  const cl = vx.cl;
+  const hasAdd = rx.add != null && rx.add > 0;
+  const dom = ctx.dom === eye;
+  const toric = Math.abs(cl.cyl) >= 0.75 - EPS;
+  const mode = hasAdd ? (toric ? 'mft' : 'mf') : (toric ? 'toric' : 'sph');
+  const need = { mode, sph: cl.sph, cyl: cl.cyl, ax: cl.ax, se: cl.se, add: hasAdd ? rx.add : null, dom };
+  const r = { eye, rx, vx, cl, mode, dom, need, flags: [], seq: null };
+  r.list = matchesFor(need, ctx.pref);
+  if (Math.abs(cl.cyl) > EPS && !toric) r.flags.push({ t: `Cylinder ${fD(cl.cyl)} ≤ 0.50: spherical lens at the spherical equivalent ${fD(cl.se)}` });
+  if (hasAdd && rx.add < 0.75 - EPS) r.flags.push({ t: `ADD +${rx.add.toFixed(2)} is below most guide tables (+0.75 minimum)`, c: 'w' });
+  // Spherical-equivalent alternative at exactly 0.75 cyl
+  if (toric && Math.abs(cl.cyl) <= 0.75 + EPS) {
+    r.alt = matchesFor({ ...need, mode: hasAdd ? 'mf' : 'sph' }, ctx.pref);
+  }
+  const stock = r.list.filter(m => !m.p.custom);
+  if (mode === 'toric' || mode === 'sph') {
+    if (!stock.length) {
+      r.flags.push({ t: r.list.length ? 'Outside all stock lens ranges: custom lens' : 'Outside all soft lens ranges: RGP or specialty referral', c: 'b' });
+    } else if (mode === 'toric' && !stock.some(m => !m.p.xr)) {
+      r.flags.push({ t: `Cylinder/sphere exceeds standard toric ranges: XR lens first, custom next`, c: 'w' });
+    }
+  }
+  if ((mode === 'mft' || mode === 'mf') && !stock.length) {
+    // Fallback sequence, in the order required for presbyopes
+    const seq = [];
+    const custom = r.list.find(m => m.p.custom);
+    if (mode === 'mft') {
+      seq.push({ k: `Custom soft multifocal toric`, m: custom || null });
+      const mfs = matchesFor({ ...need, mode: 'mf' }, ctx.pref).filter(m => !m.p.custom);
+      seq.push({ k: `Multifocal spherical at the spherical equivalent (leaves ${fD(cl.cyl)} uncorrected)`, m: mfs[0] || null });
+    } else {
+      seq.push({ k: `Custom soft multifocal`, m: custom || null });
+    }
+    const mvNeed = dom ? { ...need, mode: toric ? 'toric' : 'sph' } : { ...need, mode: toric ? 'toric' : 'sph', sph: rq(cl.sph + rx.add), se: rq(cl.se + rx.add) };
+    const mv = matchesFor(mvNeed, ctx.pref).filter(m => !m.p.custom);
+    seq.push({ k: `Monovision${toric ? ' with toric correction' : ''}: ${dom ? 'dominant eye for distance' : `non-dominant eye for near (distance + ADD = ${fD(mvNeed.sph)})`}`, m: mv[0] || null, mono: true });
+    seq.push({ k: 'RGP or specialty referral', m: null, ref: true });
+    r.seq = seq;
+    r.flags.push({ t: mode === 'mft' ? 'Outside all stock multifocal toric lenses: fallback sequence below' : 'Outside all stock multifocal lenses: fallback sequence below', c: 'b' });
+  }
+  return r;
+}
+
+// Choose first trial and backup; prefer the same product on both eyes when both need the same lens type.
+function choose(res) {
+  const eyes = res.filter(Boolean);
+  for (const r of eyes) { r.first = null; r.backup = null; }
+  const usable = r => r.seq ? r.seq.filter(s => s.m).map(s => ({ ...s.m, seqLabel: s.k })) : r.list;
+  if (eyes.length === 2 && eyes[0].mode === eyes[1].mode && !eyes[0].seq && !eyes[1].seq) {
+    const [a, b] = eyes;
+    const common = a.list.filter(m => b.list.some(n => n.p === m.p)).map(m => ({ p: m.p, s: m.rank + b.list.find(n => n.p === m.p).rank })).sort((x, y) => x.s - y.s);
+    if (common.length) {
+      const f = common[0].p;
+      const bk = (common.find(c => c.p.mk !== f.mk) || common[1] || {}).p;
+      for (const r of eyes) {
+        r.first = r.list.find(m => m.p === f);
+        r.backup = bk ? r.list.find(m => m.p === bk) : (r.list.find(m => m.p !== f) || null);
+      }
+    }
+  }
+  for (const r of eyes) {
+    const L = usable(r);
+    if (!r.first) r.first = L[0] || null;
+    if (!r.backup) r.backup = r.seq ? (L[1] || null) : (L.find(m => r.first && m.p.mk !== r.first.p.mk) || L.find(m => m !== r.first) || null);
+    if (r.alt && r.alt.length) { r.backup = { ...r.alt[0], altNote: `Cylinder is only ${fD(r.cl.cyl)}: spherical ${r.mode === 'mft' ? 'multifocal ' : ''}lens at the spherical equivalent ${fD(r.cl.se)}` }; }
+  }
+  return res;
+}
+
+function analyze(input) {
+  const ctx = { dmm: input.dmm, dom: input.dom, pref: input.pref };
+  const res = ['OD', 'OS'].map(e => input[e] ? analyzeEye(e, input[e], ctx) : null);
+  return choose(res);
+}
+
+/* ---------- Formatting ---------- */
+const MINUS = '−';
+function fD(x, dec = 2, ascii = false) {
+  if (x == null || isNaN(x)) return '—';
+  const v = Math.abs(x) < 5e-4 ? 0 : x;
+  const s = Math.abs(v).toFixed(dec);
+  return (v > 0 ? '+' : v < 0 ? (ascii ? '-' : MINUS) : (dec === 2 ? '' : '')) + s;
+}
+const pad = a => String(a).padStart(3, '0');
+function rxStr(sph, cyl, ax, ascii) {
+  const s = Math.abs(sph) < 1e-9 ? 'PL' : fD(sph, 2, ascii);
+  return cyl ? `${s} ${fD(cyl, 2, ascii)} x ${pad(ax)}` : `${s} DS`;
+}
+
+return { P, ADD, ADD_FLAGS, GUIDE_OF, rq, vtx, convert, powers, matchProduct, matchesFor, analyze, analyzeEye, fD, rxStr, pad, axNorm, A10, LIM };
+})();
+if (typeof module !== 'undefined') module.exports = E;
+</script>
+
+<script>
+/* ===== UI ===== */
+(() => {
+const { P, convert, analyze, fD, rxStr, pad, matchProduct, ADD_FLAGS } = E;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const GUIDES = [
+ { key:'alcon', mk:'Alcon', title:'TOTAL30, TOTAL30 for Astigmatism and TOTAL30 Multifocal (lehfilcon A) Professional Fitting and Information Guide',
+   url:'https://alcon.widen.net/s/8zxsbnpz7j/w900436305-0322-fg-lefcona-us',
+   applies:'TOTAL30 Multifocal (read). Also used, flagged UNVERIFIED, for TOTAL30 Multifocal for Astigmatism, DAILIES TOTAL1 Multifocal, DAILIES AquaComfort Plus Multifocal and AIR OPTIX plus HydraGlyde Multifocal, whose own guide PDFs were not read.',
+   first:'Careful maximum-plus sphero-cylindrical refraction and near ADD first. Distance power = spherical equivalent (least minus / most plus), vertex-corrected if the SE is over ±4.00 D. Start at a power equal to or less minus / more plus than the vertex-corrected SE.',
+   add:'One table, same ADD in both eyes: spectacle ADD up to +1.25 → LO; +1.50 to +2.00 → MED; +2.25 to +2.50 → HI.',
+   dom:'Not needed for the first pair. For enhancement: hold a +1.50 lens over each eye in turn while the patient views distance with both eyes open. The eye that blurs least is the non-dominant eye.',
+   opt:['Let lenses settle 10–15 min. Check binocular distance VA and real-world near (phone, magazine).',
+        'If not satisfied: binocular distance over-refraction with hand-held lenses, encourage plus. If not plano, change trial power and keep the ADD.',
+        'Enhance near, step A: +0.50 over the non-dominant eye. If it helps, new lens with the same ADD and +0.50 D distance power on that eye.',
+        'Enhance near, step B (ADD change): up to +1.25 → MED / MED; +1.50 to +2.00 → MED dominant / HI non-dominant; +2.25 to +2.50 → HI dominant / MED non-dominant.',
+        'Enhance distance (over-refraction did not help): +1.50 to +2.00 → LO dominant / MED non-dominant; +2.25 to +2.50 → HI dominant / MED non-dominant (as printed in the guide table).'],
+   mono:'The guide includes monovision fitting guidelines: non-dominant eye usually for near; add the near ADD to that eye\'s spherical equivalent.' },
+ { key:'bl', mk:'Bausch + Lomb', title:'Bausch + Lomb Multifocal 2-Step Fitting Guide (2022)',
+   url:'https://ecp.bauschcontactlenses.com/siteassets/pdf/bausch-lomb-multifocal-2-step-fitting-guide.pdf',
+   extra:[['ULTRA for Presbyopia Fitting Guide','https://ecp.bauschcontactlenses.com/siteassets/pdf/ultra-multifocal-fitting-guide.pdf'],['INFUSE package insert / fitting guide','https://ecp.bauschcontactlenses.com/globalassets/pdf/packageinserts/vision-care/lenses/bausch-lomb-infuse-package-insert-fitting-guide.pdf']],
+   applies:'INFUSE Multifocal, ULTRA for Presbyopia, ULTRA Multifocal for Astigmatism, Biotrue ONEday for Presbyopia (B+L lists the same 3-Zone Progressive design for all four).',
+   first:'Update spectacle refraction and ADD. Distance = spherical equivalent of the spectacle Rx (or the toric power for astigmatic patients), adjusted for vertex if needed.',
+   add:'Same ADD in both eyes: spectacle ADD +0.75 to +1.50 → Low; +1.75 to +2.50 → High.',
+   dom:'Found during refinement. ULTRA guide method: hold a +1.50 loose lens over each eye in turn through the distance correction; the eye where binocular vision is blurriest is the dominant eye.',
+   opt:['Let lenses settle at least 10 min. Confirm axis orientation (toric). Check distance and near binocularly in normal room light.',
+        'Near, two Low: refinement 1 → Low dominant / High non-dominant; refinement 2 → +0.25 D at a time on the non-dominant eye.',
+        'Near, two High: refinement 1 → +0.25 D on the non-dominant eye; refinement 2 → more +0.25 D steps on the non-dominant eye.',
+        'Distance, two Low: refinement 1 → single-vision spherical (or toric) lens on the dominant eye, Low on the non-dominant eye; refinement 2 → −0.25 D at a time on the dominant eye.',
+        'Distance, two High: refinement 1 → Low dominant / High non-dominant; refinement 2 → −0.25 D at a time on the dominant eye.'],
+   mono:'The INFUSE package insert includes monovision fitting guidelines (non-dominant eye generally corrected for near).' },
+ { key:'cvbf', mk:'CooperVision', title:'Biofinity multifocal lens fitting guidelines (2023)',
+   url:'https://coopervision.com/sites/coopervision.com/files/media-document/biofinity-mf-fitting-guide.pdf',
+   applies:'Biofinity multifocal.',
+   first:'New refraction. Verify eye dominance (fogging technique). Distance = spherical equivalent corrected for vertex distance. Prescribe maximum plus; do not over-minus.',
+   add:'ADD +1.00 or +1.50 → D lens in both eyes. ADD +2.00 or +2.50 → D lens dominant eye, N lens non-dominant eye. Choose the lower ADD when possible.',
+   dom:'Fogging technique at the first visit.',
+   opt:['Wait at least 15 min. If binocular vision is not acceptable, do a monocular over-refraction with hand-held lenses to find the eye that needs help.',
+        'Distance: ±0.25 D (up to ±0.50 D) on that eye. Near: ±0.25 D (up to ±0.50 D) on that eye.',
+        'One-week follow-up: first option ±0.25 D distance power on the eye that needs it; second option +0.50 D to the ADD of the eye that needs better near.'],
+   mono:'Not stated in this guide.' },
+ { key:'cvbtmf', mk:'CooperVision', title:'Biofinity toric multifocal lens fitting guide (2020)',
+   url:'https://coopervision.com/sites/coopervision.com/files/media-document/biofinity-toric-mf-fitting-guide.pdf',
+   applies:'Biofinity toric multifocal (made to order).',
+   first:'Up-to-date spectacle Rx with ADD; find ocular dominance. Sphere, cylinder and axis corrected for vertex, axis rounded to the nearest 5° (or use the OptiExpert app). Optional toric trial to confirm rotation; compensate to the nearest 5°.',
+   add:'Spectacle ADD +0.75, +1.00, +1.25 → ADD +1.00, D/D. +1.50, +1.75 → +1.50, D/D. +2.00, +2.25 → +2.00, D dominant / N non-dominant. +2.50 or above → +2.50, D/N.',
+   dom:'Determined at step 1 (method not specified in this guide).',
+   opt:['Wait at least 15 min. Check toric orientation and fit. If binocular distance is 20/30 or better, return in 1 week.',
+        'Distance: ±0.25 D on the eye that improves most (most likely dominant), changing the distance sphere.',
+        'Near: ±0.25 D on the eye that improves most (most likely non-dominant), changing the distance sphere, not the ADD.',
+        'Follow-up: ±0.25 D first; if still needed, +0.50 D to the ADD of the eye that needs better near.'],
+   mono:'Not stated in this guide.' },
+ { key:'jj', mk:'J&J Acuvue', title:'ACUVUE OASYS MAX 1-Day Package Insert & Fitting Instruction Guide (Multifocal and Multifocal Toric Fitting Guidelines)',
+   url:'https://assets.contentstack.io/v3/assets/bltc6e7ece114c6734f/blte2e1477264380f69/aomax1d_package_insert_fitting_guide.pdf',
+   extra:[['ACUVUE Multifocal Fit Guide, "Your quick and easy guide to fit success" (2024)','https://assets.contentstack.io/v3/assets/bltc6e7ece114c6734f/blt30e7d8da20143af0/67d9327fdb833b36e95536cd/2024PP15728_MULTIFOCAL_Fit_Guide_with_AOMAX_-_Gulf.pdf']],
+   applies:'ACUVUE OASYS MAX 1-Day MULTIFOCAL and MULTIFOCAL for ASTIGMATISM (insert). The Fit Guide covers 1-DAY ACUVUE MOIST MULTIFOCAL, ACUVUE OASYS MULTIFOCAL 2-week and OASYS MAX 1-Day MULTIFOCAL with the same table.',
+   first:'Distance trial power closest to the distance spherical equivalent; vertex compensation generally only at ±4.00 D or more. Fit Guide: find the Best Vision Sphere (least minus for best distance VA) in a trial frame. Astigmatism ≤ 0.75 DC → spherical multifocal; −0.75 to −1.75 DC → MULTIFOCAL for ASTIGMATISM (cyl −1.00; sphere may compensate for under- or over-corrected cyl; axis as close as possible).',
+   add:'ADD +0.75 to +1.25 → LOW on each eye. +1.50 to +1.75 → MID on each eye. +2.00 to +2.50 → MID dominant eye, HIGH non-dominant eye. Fit Guide tip: find the lowest ADD needed, starting 0.50 D below the spectacle ADD.',
+   dom:'Fit Guide: sensory dominance with the +1.00 D blur test, with the Best Vision Sphere in the trial frame (not sighting).',
+   opt:['Settle at least 10 min. Check distance and near, binocular and monocular, in normal and dim light.',
+        'Change power by the distance over-refraction with hand-held lenses.',
+        'Near not acceptable (no over-refraction change): +0.25 D to the sphere of the non-dominant eye.',
+        'Distance not acceptable: LOW/LOW → dominant eye to a spherical lens at the SE; MID/MID → dominant eye to LOW; MID/HIGH → non-dominant eye to MID and +0.25 D distance power.',
+        'Established wearer with new complaints: do not over-refract or change the ADD; repeat the initial selection steps.'],
+   mono:'The package insert includes monovision fitting guidelines.' },
+];
+const GUIDE_BY = Object.fromEntries(GUIDES.map(g => [g.key, g]));
+
+/* ----- Eye input cards ----- */
+const FIELDS = [['sph', 'Sphere', 0.25], ['cyl', 'Cylinder', 0.25], ['ax', 'Axis', 5], ['add', 'ADD', 0.25]];
+$('#eyes').innerHTML = ['OD', 'OS'].map(e => `
+  <div class="eye card" style="background:var(--panel2)">
+    <h3>${e} <span class="muted" style="font-family:var(--sans);font-size:.85rem;font-weight:500">${e === 'OD' ? 'right' : 'left'} eye</span> <span class="tag" id="tag-${e}">non-dominant</span></h3>
+    <div class="inputs">${FIELDS.map(([k, lab, st]) => `
+      <div class="field"><label for="${e}-${k}">${lab}</label>
+        <div class="step"><button type="button" aria-label="${e} ${lab} down" data-t="${e}-${k}" data-d="-${st}">−</button>
+        <input id="${e}-${k}" inputmode="${k === 'ax' ? 'numeric' : 'decimal'}" autocomplete="off" placeholder="${k === 'ax' ? '—' : k === 'add' ? '—' : '0.00'}">
+        <button type="button" aria-label="${e} ${lab} up" data-t="${e}-${k}" data-d="${st}">+</button></div></div>`).join('')}
+    </div>
+  </div>`).join('');
+
+document.querySelectorAll('.step button').forEach(b => b.addEventListener('click', () => {
+  const inp = document.getElementById(b.dataset.t), d = +b.dataset.d, isAx = b.dataset.t.endsWith('ax');
+  let v = parseFloat(inp.value); if (isNaN(v)) v = isAx ? 180 : 0;
+  v = isAx ? ((Math.round(v + d) - 1 + 180) % 180) + 1 : Math.round((v + d) * 4) / 4;
+  if (b.dataset.t.endsWith('add') && v < 0) v = 0;
+  inp.value = isAx ? v : (v > 0 ? '+' : '') + v.toFixed(2);
+  update();
+}));
+
+function parseD(s) { s = (s || '').trim().replace('−', '-'); if (!s) return null; if (/^(pl|plano)$/i.test(s)) return 0; const v = Number(s); return isNaN(v) ? NaN : v; }
+function readInput() {
+  const errs = [];
+  const dmm = parseD($('#vd').value);
+  if (dmm == null || isNaN(dmm) || dmm < 0 || dmm > 25) errs.push('Vertex distance must be 0–25 mm.');
+  const out = { dmm: (dmm == null || isNaN(dmm)) ? 12 : dmm, dom: document.querySelector('input[name=dom]:checked').value, pref: document.querySelector('input[name=pref]:checked').value };
+  for (const e of ['OD', 'OS']) {
+    const sph = parseD($(`#${e}-sph`).value), cyl = parseD($(`#${e}-cyl`).value), ax = parseD($(`#${e}-ax`).value), add = parseD($(`#${e}-add`).value);
+    if (sph == null && cyl == null && add == null) { out[e] = null; continue; }
+    const bad = [];
+    if (sph == null || isNaN(sph) || Math.abs(sph) > 30) bad.push('sphere (−30 to +30)');
+    if (cyl != null && (isNaN(cyl) || Math.abs(cyl) > 15)) bad.push('cylinder (−15 to +15)');
+    if (cyl && (ax == null || isNaN(ax) || ax < 0 || ax > 180)) bad.push('axis (0–180)');
+    if (add != null && (isNaN(add) || add < 0 || add > 4)) bad.push('ADD (0 to +4.00)');
+    if (bad.length) { errs.push(`${e}: check ${bad.join(', ')}.`); out[e] = null; continue; }
+    out[e] = { sph, cyl: cyl || 0, ax: ax || 180, add: add || null };
+  }
+  return { input: out, errs };
+}
+
+/* ----- Rendering ----- */
+const MODE_LABEL = { sph: 'Spherical', toric: 'Toric', mf: 'Multifocal', mft: 'Multifocal toric' };
+const MOD_LABEL = { daily: 'Daily disposable', monthly: 'Monthly', '2wk': '2-week', '1wk': '1-week', quarterly: 'Custom (lab schedule)', '6 mo': '6-month' };
+const f3 = x => fD(x, 3);
+function vertexSteps(r, dmm) {
+  const v = r.vx, d = (dmm / 1000).toFixed(3);
+  const L = [];
+  L.push(`Glasses${v.transposed ? ' (transposed to minus cyl)' : ''}: <span class="mono">${rxStr(v.sph, v.cyl, v.ax)}</span>`);
+  L.push(`Meridian ${pad(v.ax)}: <span class="mono">${fD(v.m1)} / (1 − ${d} × ${fD(v.m1)}) = ${f3(v.v1)}</span>`);
+  if (v.cyl) L.push(`Meridian ${pad(v.ax2)}: <span class="mono">${fD(v.m2)} / (1 − ${d} × ${fD(v.m2)}) = ${f3(v.v2)}</span>`);
+  if (v.cyl) L.push(`Recombined: sphere <span class="mono">${f3(v.v1)}</span>, cylinder <span class="mono">${f3(v.v2)} − (${f3(v.v1)}) = ${f3(v.cylRaw)}</span> × ${pad(v.ax)}`);
+  L.push(`Rounded to 0.25 D: <span class="mono">${rxStr(r.cl.sph, r.cl.cyl, r.cl.ax)}</span>`);
+  if (v.cyl) L.push(`Spherical equivalent: <span class="mono">(${f3(v.v1)} + ${f3(v.v2)}) / 2 = ${f3(v.seRaw)} → ${fD(r.cl.se)}</span>`);
+  if (v.carry) L.push(`<strong>Change is under 0.25 D: the glasses power carries over.</strong>`);
+  return L;
+}
+function clLine(r) {
+  if (r.mode === 'sph') return rxStr(r.cl.se, 0, 0);
+  if (r.mode === 'toric') return rxStr(r.cl.sph, r.cl.cyl, r.cl.ax);
+  if (r.mode === 'mf') return `${rxStr(r.cl.se, 0, 0)} · ADD +${r.rx.add.toFixed(2)} (spectacle)`;
+  return `${rxStr(r.cl.sph, r.cl.cyl, r.cl.ax)} · ADD +${r.rx.add.toFixed(2)} (spectacle)`;
+}
+function lensPower(m, ascii) {
+  let s = m.cyl ? rxStr(m.sph, m.cyl, m.ax, ascii) : rxStr(m.sph, 0, 0, ascii);
+  if (m.add) s += ` ADD ${m.add.lens}`;
+  return s;
+}
+function lensCard(m, title, r) {
+  if (!m) return `<div class="rcard"><h4>${title}</h4><p class="empty">No lens in range.</p></div>`;
+  const p = m.p, gk = p.add && E.GUIDE_OF[p.add];
+  const badge = { tld: '<span class="badge b-tld">TLD</span>', custom: '<span class="badge b-cust">Custom</span>', limited: '<span class="badge b-lim">Limited</span>' }[p.st] || '';
+  const notes = [...(m.altNote ? [m.altNote] : []), ...(m.seqLabel ? [`Fallback: ${m.seqLabel}`] : []), ...m.notes];
+  return `<div class="rcard${title.startsWith('First') ? ' hero' : ''}"><h4>${title}</h4>
+    <p class="pname">${esc(p.nm)}${badge}</p>
+    <p class="pmeta">${esc(p.mk)} · ${MOD_LABEL[p.mod] || p.mod} · Dk ${p.dk}</p>
+    <dl class="kv"><dt>BC</dt><dd>${esc(p.bc)}</dd><dt>DIA</dt><dd>${esc(p.dia)}</dd><dt>Power</dt><dd>${lensPower(m)}</dd>
+    ${m.add ? `<dt>ADD rule</dt><dd style="font-family:var(--sans);font-weight:500">${esc(m.add.rule)}${gk ? ` — <a href="#g-${gk}">guide</a>` : ''}</dd>` : ''}
+    ${m.add && r ? `<dt>Eye role</dt><dd style="font-family:var(--sans);font-weight:500">${r.dom ? 'Dominant' : 'Non-dominant'}</dd>` : ''}</dl>
+    ${notes.length ? `<ul class="flags">${notes.map(n => `<li class="${/UNVERIFIED/.test(n) ? 'w' : ''}">${esc(n)}</li>`).join('')}</ul>` : ''}
+  </div>`;
+}
+function eyeCol(r, dmm) {
+  if (!r) return '';
+  const chips = [`<span class="chip ac">${MODE_LABEL[r.mode]}</span>`, r.dom ? '<span class="chip">Dominant</span>' : '<span class="chip">Non-dominant</span>'];
+  const flags = r.flags.map(f => `<li class="${f.c || ''}">${esc(f.t)}</li>`).join('');
+  const seq = r.seq ? `<div class="rcard"><h4>Fallback sequence</h4><ol class="steps">${r.seq.map(s => `<li>${esc(s.k)}: ${s.m ? `<strong>${esc(s.m.p.nm)}</strong> <span class="mono">${lensPower(s.m)}</span>` : s.ref ? 'refer if soft options fail' : '<span class="muted">no lens in range</span>'}</li>`).join('')}</ol></div>` : '';
+  const gk = r.first && r.first.p.add && E.GUIDE_OF[r.first.p.add];
+  const g = gk && GUIDE_BY[gk];
+  const opt = g ? `<div class="rcard"><h4>Guide follow-up (${esc(g.mk)})</h4><ul class="flags">${g.opt.map(o => `<li>${esc(o)}</li>`).join('')}</ul><p class="muted" style="margin:8px 0 0;font-size:.9rem">Monovision: ${esc(g.mono)}</p></div>` : '';
+  return `<div class="col" aria-label="${r.eye} results"><h3>${r.eye}</h3>
+    <div class="rcard"><h4>1 · Vertex conversion (${dmm} mm)</h4><ol class="steps">${vertexSteps(r, dmm).map(s => `<li>${s}</li>`).join('')}</ol></div>
+    <div class="rcard"><h4>2 · Converted CL Rx</h4><div class="bigrx">${clLine(r)}</div>${chips.join('')}</div>
+    ${lensCard(r.first, '3 · First trial lens', r)}
+    ${lensCard(r.backup, '4 · Backup', r)}
+    ${seq}
+    ${flags ? `<div class="rcard"><h4>Compromises and flags</h4><ul class="flags">${flags}</ul></div>` : ''}
+    ${opt}
+  </div>`;
+}
+
+function chartNote(input, res) {
+  const L = [];
+  L.push('CONTACT LENS STARTING RX (trial lens; verify on eye)');
+  L.push(`Vertex distance ${input.dmm} mm | Dominant eye ${input.dom} | Preference ${input.pref}`);
+  L.push('', 'GLASSES RX (as entered)');
+  for (const r of res) if (r) L.push(`${r.eye}: ${rxStr(r.rx.sph, r.rx.cyl, r.rx.cyl ? r.rx.ax : 0, true)}${r.rx.add ? ` ADD +${r.rx.add.toFixed(2)}` : ''}`);
+  L.push('', 'VERTEX CONVERSION F/(1 - dF)');
+  for (const r of res) if (r) {
+    const v = r.vx;
+    L.push(`${r.eye}: ${fD(v.m1, 2, true)} @${pad(v.ax)} -> ${fD(v.v1, 3, true)}${v.cyl ? `; ${fD(v.m2, 2, true)} @${pad(v.ax2)} -> ${fD(v.v2, 3, true)}; cyl ${fD(v.cylRaw, 3, true)}; SE ${fD(v.seRaw, 3, true)}` : ''}${v.carry ? ' (change < 0.25 D, carried over)' : ''}`);
+  }
+  L.push('', 'CONVERTED CL RX');
+  for (const r of res) if (r) L.push(`${r.eye}: ${rxStr(r.cl.sph, r.cl.cyl, r.cl.ax, true)} (SE ${fD(r.cl.se, 2, true)}) - ${MODE_LABEL[r.mode]}`);
+  const lens = m => m ? `${m.p.nm} (${m.p.mk}), BC ${m.p.bc}, DIA ${m.p.dia}, ${lensPower(m, true)}` : 'none in range';
+  L.push('', 'FIRST TRIAL LENS');
+  for (const r of res) if (r) L.push(`${r.eye}: ${lens(r.first)}`);
+  L.push('', 'BACKUP');
+  for (const r of res) if (r) L.push(`${r.eye}: ${lens(r.backup)}`);
+  L.push('', 'COMPROMISES');
+  let any = false;
+  for (const r of res) if (r) {
+    const items = [...r.flags.map(f => f.t), ...(r.first ? r.first.notes : [])];
+    if (r.first && r.first.add) items.unshift(`ADD: ${r.first.add.rule} (${r.dom ? 'dominant' : 'non-dominant'} eye)`);
+    if (r.seq) items.push('Fallback order: ' + r.seq.map((s, i) => `${i + 1}) ${s.k}`).join('; '));
+    for (const t of items) { L.push(`${r.eye}: ${t.replace(/−/g, '-').replace(/→/g, '->').replace(/≈/g, '~').replace(/≤/g, '<=').replace(/·/g, '*').replace(/θ/g, 'theta')}`); any = true; }
+  }
+  if (!any) L.push('None');
+  return L.join('\n');
+}
+
+let last = null;
+function update() {
+  const { input, errs } = readInput();
+  $('#formerr').textContent = errs.join(' ');
+  ['OD', 'OS'].forEach(e => { const t = $(`#tag-${e}`); const d = input.dom === e; t.textContent = d ? 'dominant' : 'non-dominant'; t.classList.toggle('dom', d); });
+  let res = [null, null];
+  try { res = analyze(input); } catch (err) { $('#formerr').textContent = 'Something went wrong with this Rx. Check the numbers and try again.'; console.error(err); }
+  last = { input, res };
+  $('#results').innerHTML = res.some(Boolean) ? res.map(r => eyeCol(r, input.dmm)).join('') : '<p class="empty">Enter a sphere for OD and/or OS to see results.</p>';
+  renderTable();
+}
+
+/* ----- Copy chart note ----- */
+$('#copy').addEventListener('click', async () => {
+  const t = $('#toast');
+  if (!last || !last.res.some(Boolean)) { t.textContent = 'Enter an Rx first.'; return; }
+  const text = chartNote(last.input, last.res);
+  try { await navigator.clipboard.writeText(text); t.textContent = 'Chart note copied.'; }
+  catch { // fallback for browsers that block the clipboard API
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); t.textContent = 'Chart note copied.'; } catch { t.textContent = 'Copy blocked by the browser. Select the text manually.'; }
+    ta.remove();
+  }
+  setTimeout(() => { t.textContent = ''; }, 2500);
+});
+$('#clear').addEventListener('click', () => { document.querySelectorAll('.inputs input').forEach(i => i.value = ''); update(); });
+['input', 'change'].forEach(ev => document.querySelector('#calc .card').addEventListener(ev, e => { if (e.target.matches('input')) update(); }));
+
+/* ----- Vertex reference table ----- */
+(() => {
+  const rows = [];
+  for (let p = 4; p <= 12 + 1e-9; p += 0.5) {
+    const m = E.vtx(-p, 12), q = E.vtx(p, 12);
+    rows.push(`<tr><td class="n">${fD(-p)}</td><td class="n">${fD(m, 3)}</td><td class="n"><strong>${fD(E.rq(m))}</strong></td><td class="n">${fD(p)}</td><td class="n">${fD(q, 3)}</td><td class="n"><strong>${fD(E.rq(q))}</strong></td></tr>`);
+  }
+  $('#vtable').innerHTML = `<thead><tr><th>Glasses</th><th>Exact CL</th><th>CL (0.25)</th><th>Glasses</th><th>Exact CL</th><th>CL (0.25)</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+})();
+
+/* ----- Brand table ----- */
+const AX_DESC = ax => ax.length === 180 ? '1°–180°' : ax.length === 36 && ax[0] === 5 ? '5°–180°, 5° steps' : ax.length === 18 ? '10°–180°, 10° steps' : ax.join(', ') + '°';
+function segDesc(segs) {
+  const L = E.powers(segs); if (!L.length) return '';
+  const half = segs.filter(s => s[2] === 0.5).map(s => `${fD(Math.max(s[0], s[1]))} to ${fD(Math.min(s[0], s[1]))}`);
+  return `${fD(L[L.length - 1])} to ${fD(L[0])}${half.length ? ` (0.50 steps: ${half.join(', ')})` : ''}${segs.minAbs ? (segs.minAbs >= 0.5 ? ', no plano or ±0.25' : ', no plano') : ''}`;
+}
+const TYPE_LABEL = p => p.custom ? 'Custom (all types)' : MODE_LABEL[p.ty[0]];
+function sphDesc(p) { if (p.dispSph) return p.dispSph; if (p.sph) return segDesc(p.sph); const all = []; p.bands.forEach(b => b.s.forEach(s => all.push(s))); const L = E.powers(all); return `${fD(L[L.length - 1])} to ${fD(L[0])}`; }
+function cylDesc(p) {
+  if (p.dispCyl) return p.dispCyl;
+  if (!p.bands) return '—';
+  if (p.custom) return '−0.50 to −10.00 (0.25), 1° axes';
+  return p.bands.map(b => `${b.c.map(c => fD(c)).join(', ')} @ ${AX_DESC(b.ax)}${p.bands.length > 1 ? ` [sph ${segDesc(b.s)}]` : ''}`).join('; ');
+}
+function addDesc(p) {
+  if (p.dispAdd) return p.dispAdd;
+  return { alcon: 'LO / MED / HI', bl: 'Low / High', jj: 'LOW / MID / HIGH', cvbf: '+1.00, +1.50, +2.00, +2.50 (D/N)', cvbtmf: '+1.00 to +2.50, 0.50 (D/N)', odsLMH: 'Low / Med / High', odsLH: 'Low / High', revive: '+0.50 to +3.00 (0.25)' }[p.add] || '—';
+}
+const filt = new Set(); let showAll = false;
+document.querySelectorAll('.tog[data-f]').forEach(b => b.addEventListener('click', () => { const f = b.dataset.f; filt.has(f) ? filt.delete(f) : filt.add(f); b.setAttribute('aria-pressed', filt.has(f)); renderTable(); }));
+$('#showall').addEventListener('click', e => { showAll = !showAll; e.currentTarget.setAttribute('aria-pressed', showAll); renderTable(); });
+$('#q').addEventListener('input', renderTable);
+function covers(p) {
+  if (!last) return [];
+  const out = [];
+  for (const r of last.res) if (r) {
+    // A product covers an eye only for the lens type that eye needs (SE spherical is also accepted at 0.75 cyl).
+    const modes = [r.mode];
+    if (r.alt) modes.push(r.mode === 'mft' ? 'mf' : 'sph');
+    if (modes.some(md => matchProduct(p, { ...r.need, mode: md }).ok)) out.push(r.eye);
+  }
+  return out;
+}
+function renderTable() {
+  const q = $('#q').value.trim().toLowerCase();
+  const hasRx = last && last.res.some(Boolean);
+  const mods = ['daily', 'monthly'].filter(f => filt.has(f)), tys = ['toric', 'mf', 'mft'].filter(f => filt.has(f));
+  let n = 0;
+  const rows = P.filter(p => {
+    if (q && !(p.mk + ' ' + p.nm).toLowerCase().includes(q)) return false;
+    if (mods.length && !mods.includes(p.mod)) return false;
+    if (tys.length && !tys.some(t => p.ty.includes(t))) return false;
+    p._cov = hasRx ? covers(p) : [];
+    if (hasRx && !showAll && !p._cov.length) return false;
+    return true;
+  }).map(p => {
+    n++;
+    const badge = { tld: '<span class="badge b-tld">TLD</span>', disc: '<span class="badge b-disc">Discontinued</span>', custom: '<span class="badge b-cust">Custom</span>', limited: '<span class="badge b-lim">Limited</span>' }[p.st] || '';
+    const notes = [...(p.notes || []), ...(p.addFlag ? [ADD_FLAGS[p.addFlag]] : [])].map(t => esc(t).replace('UNVERIFIED', '<span class="uv">UNVERIFIED</span>')).join('<br>');
+    return `<tr><td>${esc(p.mk)}</td><td><strong>${esc(p.nm)}</strong>${badge}</td><td>${TYPE_LABEL(p)}</td><td>${MOD_LABEL[p.mod] || p.mod}</td><td class="n">${p.dk}</td><td class="n">${esc(p.bc)}</td><td class="n">${esc(p.dia)}</td><td>${esc(sphDesc(p))}</td><td>${esc(cylDesc(p))}</td><td>${p.ty.some(t => t === 'mf' || t === 'mft') ? esc(addDesc(p)) : 'Not made'}</td><td class="cov">${hasRx ? (p._cov.join(', ') || '—') : ''}</td><td class="notes">${notes || 'ODspecs'}</td></tr>`;
+  });
+  $('#btable').innerHTML = `<thead><tr><th>Maker</th><th>Product</th><th>Type</th><th>Wear</th><th>Dk</th><th>BC</th><th>DIA</th><th>Sphere</th><th>Cyl / axis</th><th>ADD</th><th>Covers</th><th>Notes</th></tr></thead><tbody>${rows.join('') || '<tr><td colspan="12" class="empty">No product covers this Rx with these filters. Tap "Show all".</td></tr>'}</tbody>`;
+  $('#count').textContent = `${n} of ${P.length} products${hasRx && !showAll ? ' (covering this Rx)' : ''}`;
+}
+
+/* ----- Guide cards ----- */
+$('#gcards').innerHTML = GUIDES.map(g => `<article class="card guide" id="g-${g.key}"><h3>${esc(g.mk)}</h3>
+  <p class="gm"><a href="${g.url}" target="_blank" rel="noopener noreferrer">${esc(g.title)}</a>${(g.extra || []).map(([t, u]) => `<br><a href="${u}" target="_blank" rel="noopener noreferrer">${esc(t)}</a>`).join('')}</p>
+  <dl><dt>Applies to</dt><dd>${esc(g.applies)}</dd><dt>First lens</dt><dd>${esc(g.first)}</dd><dt>ADD selection</dt><dd>${esc(g.add)}</dd><dt>Dominant eye</dt><dd>${esc(g.dom)}</dd>
+  <dt>Follow-up optimization</dt><dd><ul>${g.opt.map(o => `<li>${esc(o)}</li>`).join('')}</ul></dd><dt>Monovision</dt><dd>${esc(g.mono)}</dd></dl></article>`).join('') +
+  `<article class="card guide"><h3>No guide found</h3><p class="gm">Products below are matched only from ODspecs ADD bands, or not auto-matched.</p>
+   <ul><li>MyDay multifocal and clariti 1 day multifocal: no CooperVision fitting guide found on coopervision.com product pages. ADD band from ODspecs; method UNVERIFIED.</li>
+   <li>PureVision2 for Presbyopia, SofLens Multifocal: trial lenses discontinued; ADD band from ODspecs; UNVERIFIED.</li>
+   <li>Proclear 1 day multifocal, Proclear Multifocal, Miru 1month Multifocal, NaturalVue Multifocal: guide not read; not auto-matched.</li>
+   <li>Revive custom: ADD and design set with the B+L lab; UNVERIFIED.</li></ul></article>`;
+
+/* ----- Examples ----- */
+const EXAMPLES = [
+  { t: 'High myope with astigmatism (toric)', dom: 'OD', pref: 'none', OD: { sph: -7.00, cyl: -1.50, ax: 180 }, OS: { sph: -6.50, cyl: -1.75, ax: 10 } },
+  { t: 'Hyperopic presbyope (multifocal)', dom: 'OD', pref: 'none', OD: { sph: 4.50, cyl: -0.25, ax: 90, add: 2.00 }, OS: { sph: 4.00, cyl: -0.50, ax: 90, add: 2.00 } },
+  { t: 'Presbyope with astigmatism (multifocal toric)', dom: 'OS', pref: 'none', OD: { sph: -2.50, cyl: -1.25, ax: 90, add: 1.75 }, OS: { sph: -3.00, cyl: -1.50, ax: 85, add: 1.75 } },
+];
+function loadEx(i) {
+  const x = EXAMPLES[i];
+  $('#vd').value = '12';
+  document.getElementById(x.dom === 'OD' ? 'dom-od' : 'dom-os').checked = true;
+  document.getElementById({ daily: 'pref-d', monthly: 'pref-m', none: 'pref-n' }[x.pref]).checked = true;
+  for (const e of ['OD', 'OS']) {
+    const r = x[e];
+    $(`#${e}-sph`).value = fD(r.sph).replace('−', '-'); $(`#${e}-cyl`).value = r.cyl ? fD(r.cyl).replace('−', '-') : '';
+    $(`#${e}-ax`).value = r.cyl ? r.ax : ''; $(`#${e}-add`).value = r.add ? '+' + r.add.toFixed(2) : '';
+  }
+  update();
+  $('#calc').scrollIntoView();
+}
+document.querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => loadEx(+b.dataset.ex)));
+$('#excards').innerHTML = EXAMPLES.map((x, i) => {
+  const input = { dmm: 12, dom: x.dom, pref: x.pref, OD: { add: null, ...x.OD }, OS: { add: null, ...x.OS } };
+  const res = analyze(input);
+  const txt = chartNote(input, res).split('\n\nCOMPROMISES')[0];
+  return `<article class="card"><h3>${i + 1}. ${esc(x.t)}</h3>
+    <p class="muted">OD ${rxStr(x.OD.sph, x.OD.cyl, x.OD.ax)}${x.OD.add ? ` ADD +${x.OD.add.toFixed(2)}` : ''} · OS ${rxStr(x.OS.sph, x.OS.cyl, x.OS.ax)}${x.OS.add ? ` ADD +${x.OS.add.toFixed(2)}` : ''} · dominant ${x.dom} · 12 mm</p>
+    <button class="btn primary" type="button" data-ex2="${i}">Load into calculator</button>
+    <pre>${esc(txt)}</pre></article>`;
+}).join('');
+document.querySelectorAll('[data-ex2]').forEach(b => b.addEventListener('click', () => loadEx(+b.dataset.ex2)));
+
+update();
+})();
+</script>
+</body>
+</html>
