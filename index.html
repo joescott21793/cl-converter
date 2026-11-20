@@ -456,28 +456,33 @@ function convert(rx, dmm) {
 function snap(t, L) { let v = null, d = 1e9; for (const x of L) { const e = Math.abs(x - t); if (e < d - EPS || (Math.abs(e - d) < EPS && x > v)) { v = x; d = e; } } return { v, d }; }
 function nearestAxis(a, list) { let v = list[0], d = 1e9; for (const x of list) { const e = axDiff(a, x); if (e < d - EPS) { v = x; d = e; } } return { v, err: d }; }
 
-function matchSphere(segs, t) {
+// Which lenses fit is decided on the 0.25-rounded power (t); the power picked is the
+// lens step nearest the exact converted value (raw), so we round only once, like OptiExpert.
+function matchSphere(segs, t, raw = t) {
   const L = powers(segs);
   if (!L.length || t < L[0] - EPS || t > L[L.length - 1] + EPS) return null;
-  const s = snap(t, L);
-  return s.d <= 0.25 + EPS ? s : null;
+  const s = snap(raw, L);
+  return Math.abs(s.v - t) <= 0.25 + EPS ? s : null;
 }
 function matchToric(p, need) {
   let best = null;
   for (const b of p.bands) {
     const L = powers(b.s);
     for (const c of b.c) {
-      const cd = need.cyl - c;
-      const ok = p.cylFits ? between(need.cyl, p.cylFits[0], p.cylFits[1]) : Math.abs(cd) <= 0.25 + EPS;
+      // Allowed cylinders: the rounded cyl within 0.25 of a stock cyl (unchanged coverage rule).
+      const ok = p.cylFits ? between(need.cyl, p.cylFits[0], p.cylFits[1]) : Math.abs(need.cyl - c) <= 0.25 + EPS;
       if (!ok) continue;
-      const t = need.sph + cd / 2; // keep the spherical equivalent when the lens cylinder differs
+      // Choice uses the exact converted values: cyl nearest cylRaw, sphere keeps the spherical equivalent.
+      const cylRaw = need.cylRaw ?? need.cyl, sphRaw = need.sphRaw ?? need.sph;
+      const cd = cylRaw - c;
+      const t = sphRaw + cd / 2;
       if (t < L[0] - 0.125 - EPS || t > L[L.length - 1] + 0.125 + EPS) continue;
       const s = snap(t, L);
       if (s.d > 0.25 + EPS) continue;
       const a = nearestAxis(need.ax, b.ax);
       const resid = 2 * Math.abs(c) * Math.sin(a.err * Math.PI / 180);
-      const score = Math.abs(cd) * 3 + s.d * 4 + a.err / 5 + (Math.abs(c) > Math.abs(need.cyl) + EPS ? 0.05 : 0);
-      if (!best || score < best.score - EPS) best = { sph: s.v, cyl: c, ax: a.v, axErr: a.err, cylDiff: cd, sphTarget: t, sphDiff: s.v - t, resid, score };
+      const score = Math.abs(cd) * 3 + s.d * 4 + a.err / 5 + (Math.abs(c) > Math.abs(cylRaw) + EPS ? 0.05 : 0);
+      if (!best || score < best.score - EPS) best = { sph: s.v, cyl: c, ax: a.v, axErr: a.err, cylDiff: cd, cylRaw, sphTarget: t, sphDiff: s.v - t, resid, score };
     }
   }
   return best;
@@ -488,7 +493,7 @@ function matchProduct(p, need) {
   if (!p.ty.includes(need.mode)) return { ok: false, why: 'Wrong lens type' };
   const m = { ok: true, p, notes: [], uv: false };
   if (need.mode === 'sph' || need.mode === 'mf') {
-    const s = matchSphere(p.sph, need.se);
+    const s = matchSphere(p.sph, need.se, need.seRaw);
     if (!s) return { ok: false, why: 'Sphere out of range' };
     m.sph = s.v; m.cyl = 0; m.sphDiff = s.v - need.se; m.score = s.d * 4;
     if (Math.abs(m.sphDiff) > EPS) m.notes.push(`Sphere ${fD(s.v)} is the nearest available power to ${fD(need.se)} (${m.sphDiff > 0 ? 'more plus / less minus' : 'more minus'} by ${Math.abs(m.sphDiff).toFixed(2)} D)`);
@@ -496,8 +501,10 @@ function matchProduct(p, need) {
     const t = matchToric(p, need);
     if (!t) return { ok: false, why: 'Sphere, cylinder or axis not available' };
     Object.assign(m, t);
-    if (Math.abs(t.cylDiff) > EPS) m.notes.push(`Cylinder ${fD(t.cyl)} instead of ${fD(need.cyl)}: sphere compensated by ${fD(t.cylDiff / 2, 3)} to keep the spherical equivalent → ${fD(t.sphTarget, 3)}`);
-    if (Math.abs(t.sphDiff) > EPS) m.notes.push(`Sphere ${fD(t.sph)} is the nearest available to ${fD(t.sphTarget, 3)}`);
+    // Differences under 0.125 D are just rounding to the nearest step, not a compromise.
+    m.cylOff = Math.abs(t.cylDiff) >= 0.125 - EPS; m.sphOff = Math.abs(t.sphDiff) >= 0.125 - EPS;
+    if (m.cylOff) m.notes.push(`Cylinder ${fD(t.cyl)} for calculated ${fD(t.cylRaw)}: sphere compensated by ${fD(t.cylDiff / 2, 2)} to keep the spherical equivalent → ${fD(t.sphTarget, 2)}`);
+    if (m.sphOff) m.notes.push(`Sphere ${fD(t.sph)} is the nearest available to ${fD(t.sphTarget, 2)}`);
     if (t.axErr > 0) m.notes.push(`Axis ${pad(t.ax)} is the nearest available to ${pad(need.ax)} (${t.axErr}° off): expected residual cylinder ≈ ${t.resid.toFixed(2)} D (2·C·sin θ). Re-check rotation on eye.`);
     if (t.axErr > 10) m.big = true;
   }
@@ -540,7 +547,7 @@ function analyzeEye(eye, rx, ctx) {
   const dom = ctx.dom === eye;
   const toric = Math.abs(cl.cyl) >= 0.75 - EPS;
   const mode = hasAdd ? (toric ? 'mft' : 'mf') : (toric ? 'toric' : 'sph');
-  const need = { mode, sph: cl.sph, cyl: cl.cyl, ax: cl.ax, se: cl.se, add: hasAdd ? rx.add : null, dom };
+  const need = { mode, sph: cl.sph, cyl: cl.cyl, ax: cl.ax, se: cl.se, sphRaw: vx.v1, cylRaw: vx.cyl ? vx.cylRaw : 0, seRaw: vx.seRaw, add: hasAdd ? rx.add : null, dom };
   const r = { eye, rx, vx, cl, mode, dom, need, flags: [], seq: null };
   r.list = matchesFor(need, ctx.pref);
   if (Math.abs(cl.cyl) > EPS && !toric) r.flags.push({ t: `Cylinder ${fD(cl.cyl)} ≤ 0.50: spherical lens at the spherical equivalent ${fD(cl.se)}` });
@@ -739,11 +746,11 @@ function readCtx() {
     if (r.ok) {
       // The ADD box wins over an "add" typed inside the Rx box.
       if (typeof addIn === 'number') rx.add = addIn;
-      r.cl = convert(rx, dmm).cl;
+      r.vx = convert(rx, dmm); r.cl = r.vx.cl;
       r.hasAdd = rx.add != null;
       r.toric = Math.abs(r.cl.cyl) >= 0.75 - 1e-9;
       r.mode = r.hasAdd ? (r.toric ? 'mft' : 'mf') : (r.toric ? 'toric' : 'sph');
-      r.need = { sph: r.cl.sph, cyl: r.cl.cyl, ax: r.cl.ax, se: r.cl.se, add: r.hasAdd ? rx.add : null, dom: r.dom };
+      r.need = { sph: r.cl.sph, cyl: r.cl.cyl, ax: r.cl.ax, se: r.cl.se, sphRaw: r.vx.v1, cylRaw: r.vx.cyl ? r.vx.cylRaw : 0, seRaw: r.vx.seRaw, add: r.hasAdd ? rx.add : null, dom: r.dom };
     }
     eyes[e] = r;
   }
@@ -813,9 +820,9 @@ const typeOf = p => p.custom ? 'Custom' : TYPE_LABEL[p.ty[0]];
 function shortNote(m, r) {
   const n = [];
   if (m.mode !== r.mode) n.push(m.mode === 'sph' ? 'sphere at spherical equivalent' : 'spherical MF at spherical equivalent');
-  if (m.cylDiff) n.push(`cyl ${fD(m.cyl)} for ${fD(r.cl.cyl)}`);
+  if (m.cylOff) n.push(`cyl ${fD(m.cyl)} for ${fD(m.cylRaw)}`);
   if (m.axErr) n.push(`axis ${m.axErr}° off`);
-  if (Math.abs(m.sphDiff || 0) > 1e-9) n.push('nearest sphere');
+  if (m.cyl ? m.sphOff : Math.abs(m.sphDiff || 0) > 1e-9) n.push('nearest sphere');
   return n.join(' · ');
 }
 const lensRx = (m, ascii) => m.cyl ? rxStr(m.sph, m.cyl, m.ax, ascii) : rxStr(m.sph, 0, 0, ascii);
@@ -865,7 +872,7 @@ function lensRow(row, r) {
 
 /* ----- Render ----- */
 function column(r, view) {
-  const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta">CL <b>${clText(r)}</b>${r.hasAdd ? ` · <span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · cornea <b>${r.k.mm.toFixed(2)}</b> mm` : ''}</p>` : ''}</div>`;
+  const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta">CL <b>${clText(r)}</b> <span title="Exact vertex-converted value before rounding to lens steps">(calculated ${r.vx.cyl ? `${fD(r.vx.v1)} ${fD(r.vx.cylRaw)} x ${String(r.cl.ax).padStart(3, '0')}` : fD(r.vx.v1)})</span>${r.hasAdd ? ` · <span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · cornea <b>${r.k.mm.toFixed(2)}</b> mm` : ''}</p>` : ''}</div>`;
   if (!r.ok) return { n: null, html: `${head(null)}<p class="empty">${r.rx && r.rx.err ? esc(r.rx.err) : `Type the ${r.eye} glasses Rx above.`}</p>` };
   const rows = sortRows(rowsFor(r, view));
   lastRows[r.eye] = rows;
