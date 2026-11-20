@@ -9,150 +9,149 @@
 <meta name="referrer" content="no-referrer">
 <title>CL Rx Converter</title>
 <style>
-/* Layout: two-tone headline, segmented Rx strip with white action blocks, chip sidebar, one hairline lens list per eye. */
+/* Layout: compact Rx entry, one filter bar, then OD and OS lens columns that scroll on their own (one column + switch on phones). */
 :root{
   --bg:#0D1416; --panel:#121B1D; --panel2:#18242A; --line:#22302F; --line2:#2E3E3D;
   --text:#EEF3F2; --muted:#8FA3A1; --dim:#5F7371;
   --accent:#F2B544; --white:#FFFFFF; --ink:#0D1416; --bad:#FF7A85; --warn:#FFB27A;
-  --r:16px; --sans:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  --r:14px; --sans:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+html{scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 var(--sans);-webkit-text-size-adjust:100%}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 a{color:var(--text)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
-.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mono,.pw,.n,.rxin,.kin{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.wrap{max-width:1400px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono,.pw,.rxin,.addin,.kin,.vin{font-variant-numeric:tabular-nums}
 svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* top bar */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:rgba(13,20,22,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:14px;min-height:56px}
-.brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:-.01em}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:rgba(13,20,22,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;min-height:52px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
 .priv{margin-left:auto;color:var(--muted);font-size:.85rem;display:flex;align-items:center;gap:6px}
-/* hero */
-.hero{padding:34px 0 22px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:.8rem;color:var(--muted);margin-bottom:16px}
-.eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
-h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.08;font-weight:650;letter-spacing:-.025em;margin:0;max-width:22ch;text-wrap:balance}
-h1 span{color:var(--dim)}
-/* Rx strip */
-.strip{display:grid;grid-template-columns:minmax(0,1fr) 220px;border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;background:var(--panel)}
-.rows{min-width:0}
-.eyerow{display:grid;grid-template-columns:120px minmax(0,1fr) 190px}
+@media (max-width:560px){.priv span{display:none}}
+/* entry */
+.entry{display:grid;grid-template-columns:minmax(0,1fr) 190px;margin-top:16px;border:1px solid var(--line2);border-radius:var(--r);background:var(--panel);overflow:hidden}
+.eyerow{display:grid;grid-template-columns:92px minmax(0,1fr) 120px 150px}
 .eyerow+.eyerow{border-top:1px solid var(--line)}
-.cell{padding:14px 18px;min-width:0}
+.cell{padding:10px 16px;min-width:0}
 .cell+.cell{border-left:1px solid var(--line)}
-.eyename{display:flex;flex-direction:column;justify-content:center}
-.eyename b{font-size:1.35rem;letter-spacing:-.01em}
-.eyename small{color:var(--muted);font-size:.85rem}
-.cell label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px}
-.rxin,.kin{width:100%;border:0;background:transparent;color:var(--white);font:600 1.2rem var(--mono);padding:4px 0;min-height:40px}
-.rxin::placeholder,.kin::placeholder{color:var(--dim);font-weight:500}
-.rxin:focus,.kin:focus{outline:none}
 .cell:focus-within{background:var(--panel2)}
-.echo{font-size:.85rem;color:var(--muted);min-height:1.3em;margin-top:2px}
+.eyename{display:flex;flex-direction:column;justify-content:center}
+.eyename b{font-size:1.3rem;letter-spacing:-.01em;line-height:1.1}
+.eyename small{color:var(--muted);font-size:.8rem}
+.cell label{display:block;font-size:.75rem;color:var(--muted)}
+.rxin,.addin,.kin{width:100%;border:0;background:transparent;color:var(--white);font:600 1.15rem var(--mono);padding:2px 0;min-height:36px}
+.rxin::placeholder,.addin::placeholder,.kin::placeholder{color:var(--dim);font-weight:500}
+.rxin:focus,.addin:focus,.kin:focus{outline:none}
+.echo{font-size:.8rem;color:var(--muted);min-height:0}
+.echo:empty{display:none}
 .echo b{color:var(--text);font-weight:600;font-family:var(--mono)}
 .echo .e{color:var(--bad)}
 .acts{display:flex;flex-direction:column;border-left:1px solid var(--line)}
-.act{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border:0;font:700 1rem var(--sans);cursor:pointer;transition:background .15s,color .15s}
+.act{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border:0;font:700 .95rem var(--sans);cursor:pointer;transition:background .15s}
 .act.w{background:var(--white);color:var(--ink)}
-.act.w:hover{background:#E6ECEB}
+.act.w:hover{background:#E3EAE9}
 .act.o{background:transparent;color:var(--text);border-top:1px solid var(--line)}
 .act.o:hover{background:var(--panel2)}
-.set{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;margin-top:14px}
-.set .lab{color:var(--muted);font-size:.85rem;margin-right:8px}
-.vin{width:64px;min-height:44px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--text);font:600 1rem var(--mono);text-align:center}
-.pills{display:inline-flex;gap:6px;flex-wrap:wrap}
+.set{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:10px;color:var(--muted);font-size:.88rem}
+.set > span{display:inline-flex;align-items:center;gap:8px}
+.vin{width:58px;min-height:40px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--text);font:600 .95rem var(--mono);text-align:center}
+.pills{display:inline-flex;gap:6px}
 .pills input{position:absolute;opacity:0;pointer-events:none}
-.pills label,.chip{min-height:44px;padding:0 16px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font:600 .92rem var(--sans);cursor:pointer;white-space:nowrap}
+.pills label,.chip{min-height:40px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font:600 .9rem var(--sans);cursor:pointer;white-space:nowrap}
 .pills input:checked+label,.chip[aria-pressed=true]{background:var(--white);color:var(--ink);border-color:var(--white)}
 .pills input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
-.hint{color:var(--dim);font-size:.85rem;margin:0}
-@media (max-width:900px){.strip{grid-template-columns:minmax(0,1fr)}.acts{flex-direction:row;border-left:0;border-top:1px solid var(--line)}.act.o{border-top:0;border-left:1px solid var(--line)}}
-@media (max-width:640px){.eyerow{grid-template-columns:minmax(0,1fr)}.cell+.cell{border-left:0;border-top:1px solid var(--line)}.eyename{flex-direction:row;align-items:baseline;justify-content:flex-start;gap:8px;padding-bottom:4px}.priv span{display:none}.brand{white-space:nowrap}.eyename+.cell{border-top:0;padding-top:0}.rxin{font-size:1.1rem}}
-/* browse */
-.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start;margin-top:30px}
-@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr);gap:18px}}
-aside{position:sticky;top:76px;display:flex;flex-direction:column;gap:22px}
-@media (max-width:900px){aside{position:static}}
-aside h2{font-size:.8rem;font-weight:600;color:var(--muted);margin:0 0 10px;letter-spacing:.02em}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-@media (max-width:900px){.chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}}
-.search{display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:999px;padding:0 14px;min-height:44px;color:var(--muted)}
-.search input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font-size:1rem}
+.hint{color:var(--dim);margin:0}
+@media (max-width:1000px){.entry{grid-template-columns:minmax(0,1fr)}.acts{flex-direction:row;border-left:0;border-top:1px solid var(--line)}.act.o{border-top:0;border-left:1px solid var(--line)}}
+@media (max-width:640px){
+  .eyerow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .eyename{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:8px;padding-bottom:0}
+  .rxcell{grid-column:1/-1}
+  .cell+.cell{border-left:0}
+  .eyerow .cell.addc,.eyerow .cell.kc{border-top:1px solid var(--line)}
+  .eyerow .cell.kc{border-left:1px solid var(--line)}
+}
+/* filter bar */
+.filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:18px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+.filters .chips{display:flex;gap:6px;flex-wrap:wrap}
+.sel{min-height:40px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);padding:0 12px;font:600 .9rem var(--sans)}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:999px;padding:0 12px;min-height:40px;color:var(--muted);flex:1 1 160px;max-width:260px}
+.search input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font-size:.95rem}
 .search input:focus{outline:none}
 .search:focus-within{border-color:var(--accent)}
-.tog{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;cursor:pointer;font-size:.95rem}
-.tog input{appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background .15s}
-.tog input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:transform .15s}
+.tog{display:inline-flex;align-items:center;gap:8px;min-height:40px;cursor:pointer;font-size:.9rem;color:var(--text)}
+.tog input{appearance:none;width:36px;height:22px;border-radius:999px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.tog input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .15s}
 .tog input:checked{background:var(--accent)}
-.tog input:checked::after{transform:translateX(18px);background:var(--ink)}
-/* per-eye result lists */
-.eyes{display:flex;flex-direction:column;gap:34px;min-width:0}
-.eyesec{min-width:0}
-.sechead{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;padding-bottom:12px;border-bottom:1px solid var(--line2)}
-.sechead h2{font-size:1.6rem;font-weight:650;letter-spacing:-.02em;margin:0}
-.sechead h2 span{color:var(--dim)}
-.sechead .meta{color:var(--muted);font-size:.92rem}
-.sechead .meta b{color:var(--text);font-family:var(--mono);font-weight:600}
-.listwrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%}
-th,td{padding:14px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-th{font-size:.78rem;font-weight:600;color:var(--muted);white-space:nowrap;padding-top:12px;padding-bottom:10px}
-th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center;min-height:28px}
-th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-th[aria-sort=ascending] button::after{content:"\2191";color:var(--accent)}
-th[aria-sort=descending] button::after{content:"\2193";color:var(--accent)}
-tr.lens{cursor:pointer;transition:background .15s}
-tr.lens:hover{background:var(--panel)}
-tr.grp td{color:var(--muted);font-weight:600;font-size:.85rem;padding:18px 10px 8px;border-bottom:1px solid var(--line2)}
-.nm{font-weight:650;font-size:1.02rem;letter-spacing:-.005em}
-.co{color:var(--muted);font-size:.85rem;margin-top:2px}
-td.n{font-family:var(--mono);white-space:nowrap;color:var(--text)}
-td.n small{display:block;font-family:var(--sans);color:var(--dim);font-size:.78rem}
-.pw{font-family:var(--mono);font-weight:600;font-size:1.02rem;min-width:170px}
+.tog input:checked::after{transform:translateX(14px);background:var(--ink)}
+.sep{width:1px;height:24px;background:var(--line2)}
+@media (max-width:900px){.filters .chips{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding-bottom:2px}.sep{display:none}}
+/* eye switch (phones) */
+.switch{display:none;gap:6px;margin-bottom:10px}
+.switch button{flex:1;min-height:46px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font:700 .95rem var(--sans);cursor:pointer}
+.switch button[aria-pressed=true]{background:var(--white);color:var(--ink);border-color:var(--white)}
+.switch small{font-weight:600;opacity:.7;margin-left:4px}
+/* eye columns */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{min-width:0;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);max-height:calc(100dvh - 68px);overflow-y:auto;overscroll-behavior:contain}
+.colhead{position:sticky;top:0;z-index:2;background:var(--panel);border-bottom:1px solid var(--line2);padding:12px 16px}
+.colhead h2{margin:0;font-size:1.35rem;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
+.colhead h2 span{color:var(--muted);font-size:.9rem;font-weight:600;letter-spacing:0}
+.colhead h2 .cnt{margin-left:auto;font-size:.85rem;color:var(--muted)}
+.colhead .meta{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+.colhead .meta b{color:var(--text);font-family:var(--mono)}
+.colhead .meta .add{color:var(--accent);font-weight:700}
+@media (max-width:899px){
+  .switch{display:flex}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .col{max-height:none;overflow:visible}
+  .col[hidden]{display:none}
+  .colhead{top:52px}
+}
+/* lens rows */
+.lens{border-bottom:1px solid var(--line)}
+.row{display:block;width:100%;text-align:left;padding:12px 16px;cursor:pointer;transition:background .15s}
+.row:hover{background:var(--panel)}
+.row[aria-expanded=true]{background:var(--panel)}
+.r1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.nm{font-weight:650;font-size:1rem}
+.mk{color:var(--muted);font-size:.82rem}
+.chev{margin-left:auto;color:var(--muted);transition:transform .15s;align-self:center}
+.row[aria-expanded=true] .chev{transform:rotate(90deg);color:var(--text)}
+.grid{display:grid;grid-template-columns:70px minmax(0,1fr) 64px 64px 40px;gap:10px;margin-top:8px;align-items:end}
+.grid > div{min-width:0}
+.grid dt{font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.grid dd{margin:0;font-size:.92rem;font-family:var(--mono);white-space:nowrap}
+.grid dd.rep{font-family:var(--sans)}
+.pw{font-family:var(--mono);font-weight:700;font-size:1.05rem;white-space:normal!important}
 .pw .v{white-space:nowrap}
 .pw .add{color:var(--accent);white-space:nowrap}
-.pw small{display:block;font-family:var(--sans);font-weight:500;color:var(--muted);font-size:.8rem}
-.badge{display:inline-block;font-size:.7rem;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px;border:1px solid var(--line2);color:var(--muted)}
+.note{display:block;margin-top:4px;color:var(--muted);font-size:.8rem}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;border-radius:999px;padding:0 7px;border:1px solid var(--line2);color:var(--muted);line-height:1.6}
 .b-tld,.b-lim,.b-uv{color:var(--warn);border-color:rgba(255,178,122,.35)} .b-disc,.b-out{color:var(--bad);border-color:rgba(255,122,133,.35)} .b-cust,.b-mto{color:var(--accent);border-color:rgba(242,181,68,.35)}
-.exp{width:46px}
-.exp button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center}
-.exp button svg{transition:transform .15s}
-.exp button[aria-expanded=true]{background:var(--white);color:var(--ink);border-color:var(--white)}
-.exp button[aria-expanded=true] svg{transform:rotate(90deg)}
-tr.det>td{background:var(--panel);padding:18px 18px 20px}
-.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 26px;margin:0}
-.dl div{min-width:0}
-.dl dt{font-size:.78rem;color:var(--muted);margin-bottom:2px}
-.dl dd{margin:0;font-size:.95rem}
-.mfbox{margin-top:16px;padding:14px 16px;border:1px solid rgba(242,181,68,.35);border-radius:12px}
-.mfbox p{margin:0 0 6px;font-size:.95rem}
-.mfbox p:last-child{margin:0}
+.grp{padding:14px 16px 6px;color:var(--muted);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}
+.det{padding:4px 16px 16px;background:var(--panel)}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin:0}
+.dl dt{font-size:.72rem;color:var(--muted)}
+.dl dd{margin:0;font-size:.9rem}
+.mfbox{margin-top:12px;padding:10px 12px;border:1px solid rgba(242,181,68,.35);border-radius:10px;font-size:.9rem}
+.mfbox p{margin:0 0 4px}.mfbox p:last-child{margin:0}
 .mfbox .k{color:var(--accent);font-weight:700}
-.mfbox a{font-weight:600}
-.notes{margin:14px 0 0;padding-left:1.1em;color:var(--muted);font-size:.88rem}
+.notes{margin:10px 0 0;padding-left:1.1em;color:var(--muted);font-size:.84rem}
 .notes li.w{color:var(--warn)}
-.copyrow{margin-top:16px;display:flex;align-items:center;gap:12px}
-.btn{min-height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--white);color:var(--ink);font:700 .92rem var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.copyrow{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--white);color:var(--ink);font:700 .9rem var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.preview{font:.8rem var(--mono);color:var(--muted);word-break:break-word}
 .copied{color:var(--accent);font-weight:600}
-.empty{padding:26px 10px;color:var(--muted)}
-@media (max-width:700px){
-  table,tbody,tr,td{display:block;width:100%}
-  thead{display:none}
-  tr.lens{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding:14px 0;border-bottom:1px solid var(--line)}
-  tr.lens td{border:0;padding:0}
-  tr.lens td[data-l]::before{content:attr(data-l);display:block;font-size:.75rem;color:var(--muted)}
-  tr.lens td.lname,tr.lens td.pwc{grid-column:1/-1}
-  tr.lens td.exp{order:99;grid-column:1/-1;width:auto}
-  tr.lens td.exp button{width:100%;height:44px;border-radius:999px}
-  tr.det>td{border-radius:12px}
-}
-footer{border-top:1px solid var(--line);margin-top:44px;padding-block:20px 44px;color:var(--muted);font-size:.92rem}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.empty{padding:28px 16px;color:var(--muted)}
+footer{border-top:1px solid var(--line);margin-top:28px;padding-block:16px 36px;color:var(--muted);font-size:.85rem}
+footer p{margin:4px 0}
 </style>
 </head>
 <body>
@@ -164,22 +163,19 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-block:20px 44px;
 </header>
 
 <main class="wrap">
-  <section class="hero">
-    <div class="eyebrow">Soft lens finder</div>
-    <h1>Find soft lenses <span>that fit this prescription, right and left eye.</span></h1>
-  </section>
-
-  <section class="strip" aria-label="Prescription">
-    <div class="rows">
+  <section class="entry" aria-label="Prescription">
+    <div>
       <div class="eyerow">
-        <div class="cell eyename"><b>OD</b><small>Right eye</small></div>
-        <div class="cell"><label for="rx-OD">Glasses Rx</label><input id="rx-OD" class="rxin" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="-2.50 -1.25 x 180 add +2.00"><div class="echo" id="echo-OD" aria-live="polite"></div></div>
-        <div class="cell"><label for="k-OD">Cornea base curve (mm)</label><input id="k-OD" class="kin" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="7.80"><div class="echo" id="kecho-OD"></div></div>
+        <div class="cell eyename"><b>OD</b><small>Right</small></div>
+        <div class="cell rxcell"><label for="rx-OD">Glasses Rx</label><input id="rx-OD" class="rxin" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="-2.50 -1.25 x 180"><div class="echo" id="echo-OD" aria-live="polite"></div></div>
+        <div class="cell addc"><label for="add-OD">ADD</label><input id="add-OD" class="addin" type="text" inputmode="decimal" autocomplete="off" placeholder="+2.00"><div class="echo" id="aecho-OD"></div></div>
+        <div class="cell kc"><label for="k-OD">Cornea BC (mm)</label><input id="k-OD" class="kin" type="text" inputmode="decimal" autocomplete="off" placeholder="7.80"><div class="echo" id="kecho-OD"></div></div>
       </div>
       <div class="eyerow">
-        <div class="cell eyename"><b>OS</b><small>Left eye</small></div>
-        <div class="cell"><label for="rx-OS">Glasses Rx</label><input id="rx-OS" class="rxin" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="-2.00 -0.75 x 010 add +2.00"><div class="echo" id="echo-OS" aria-live="polite"></div></div>
-        <div class="cell"><label for="k-OS">Cornea base curve (mm)</label><input id="k-OS" class="kin" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="7.80"><div class="echo" id="kecho-OS"></div></div>
+        <div class="cell eyename"><b>OS</b><small>Left</small></div>
+        <div class="cell rxcell"><label for="rx-OS">Glasses Rx</label><input id="rx-OS" class="rxin" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="-2.00 -0.75 x 010"><div class="echo" id="echo-OS" aria-live="polite"></div></div>
+        <div class="cell addc"><label for="add-OS">ADD</label><input id="add-OS" class="addin" type="text" inputmode="decimal" autocomplete="off" placeholder="+2.00"><div class="echo" id="aecho-OS"></div></div>
+        <div class="cell kc"><label for="k-OS">Cornea BC (mm)</label><input id="k-OS" class="kin" type="text" inputmode="decimal" autocomplete="off" placeholder="7.80"><div class="echo" id="kecho-OS"></div></div>
       </div>
     </div>
     <div class="acts">
@@ -187,31 +183,32 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-block:20px 44px;
       <button class="act o" id="clear" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>Clear</button>
     </div>
   </section>
-  <div class="set">
-    <span><span class="lab">Vertex</span><label class="sr" for="vd">Vertex distance in mm</label><input id="vd" class="vin" type="text" inputmode="decimal" value="12"> <span class="lab">mm</span></span>
-    <span><span class="lab" id="dom-l">Dominant eye</span><span class="pills" role="radiogroup" aria-labelledby="dom-l"><input type="radio" name="dom" id="dom-od" value="OD" checked><label for="dom-od">OD</label><input type="radio" name="dom" id="dom-os" value="OS"><label for="dom-os">OS</label></span></span>
-    <p class="hint">Type like a chart: -2.50 -1.25 x 180 add +2.00. "pl", "DS" and -250 shorthand work.</p>
+  <div class="set" id="set">
+    <span>Vertex <label class="sr" for="vd">Vertex distance in mm</label><input id="vd" class="vin" type="text" inputmode="decimal" value="12"> mm</span>
+    <span id="dom-l">Dominant eye <span class="pills" role="radiogroup" aria-labelledby="dom-l"><input type="radio" name="dom" id="dom-od" value="OD" checked><label for="dom-od">OD</label><input type="radio" name="dom" id="dom-os" value="OS"><label for="dom-os">OS</label></span></span>
+    <p class="hint">Rx like -2.50 -1.25 x 180. "pl", "DS" and -250 shorthand work.</p>
   </div>
 
-  <div class="layout">
-    <aside aria-label="Filters">
-      <div><label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sr">Filter by name</span><input type="search" id="q" placeholder="Filter by name"></label></div>
-      <div><h2>Lens type</h2><div class="chips" id="types"></div></div>
-      <div><h2>Replacement</h2><div class="chips" id="reps"></div></div>
-      <div><h2>Options</h2>
-        <label class="tog">Only high Dk (100+)<input type="checkbox" id="hidk"></label>
-        <label class="tog">Group by company<input type="checkbox" id="grp"></label>
-        <label class="tog">Show lenses that don't fit<input type="checkbox" id="all"></label>
-      </div>
-    </aside>
-    <div class="eyes" id="eyes"></div>
+  <div class="filters" aria-label="Filters">
+    <div class="chips" id="types" role="group" aria-label="Lens type"></div>
+    <span class="sep"></span>
+    <label class="sr" for="rep">Replacement</label>
+    <select class="sel" id="rep"><option value="">Any replacement</option><option value="daily">Daily</option><option value="wk">1–2 week</option><option value="monthly">Monthly</option><option value="other">Custom</option></select>
+    <label class="sr" for="sort">Sort</label>
+    <select class="sel" id="sort"><option value="auto">Sort: closest BC</option><option value="fit">Sort: best power fit</option><option value="name">Sort: name</option><option value="dk">Sort: Dk high to low</option></select>
+    <label class="tog"><input type="checkbox" id="hidk">High Dk 100+</label>
+    <label class="tog"><input type="checkbox" id="grp">By company</label>
+    <label class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sr">Filter by name</span><input type="search" id="q" placeholder="Filter by name"></label>
   </div>
+
+  <div class="switch" id="switch" role="group" aria-label="Eye"></div>
+  <div class="cols" id="cols"></div>
 </main>
 
 <footer>
   <div class="wrap">
     <p><strong style="color:var(--text)">Starting trial lens tool for personal clinical use. The fitting doctor verifies the final prescription on eye.</strong></p>
-    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each manufacturer's fitting guide. Items marked Unverified could not be confirmed.</p>
+    <p>Lens data from <a href="https://odspecs.com/" target="_blank" rel="noopener noreferrer">ODspecs</a>, corrected with manufacturer values where they disagree, checked 19 Nov 2026. Multifocal ADDs follow each maker's fitting guide.</p>
   </div>
 </footer>
 
@@ -639,6 +636,16 @@ function parseRx(str) {
   if (out.add === 0) out.add = null;
   return out;
 }
+// ADD box: "+2.00", "2", "200" (shorthand for +2.00). Returns a number, null when empty, or {err}.
+function parseAdd(str) {
+  const s = (str || '').replace(/[−]/g, '-').replace(/add/i, '').trim();
+  if (!s) return null;
+  if (!/^[+-]?\d*\.?\d+$/.test(s)) return { err: 'Type the ADD like +2.00' };
+  let v = Math.abs(parseFloat(s));
+  if (!s.includes('.') && v >= 25) v /= 100;
+  if (v > 4) return { err: 'ADD must be +4.00 or less' };
+  return v || null;
+}
 // Corneal curvature: diopters (20–70) or radius in mm (5–12). "43.00/44.00" uses the average.
 function parseK(str) {
   const s = (str || '').replace(',', '.').trim();
@@ -679,7 +686,7 @@ function rxStr(sph, cyl, ax, ascii) {
   return cyl ? `${s} ${fD(cyl, 2, ascii)} x ${pad(ax)}` : `${s} DS`;
 }
 
-return { P, ADD, ADD_FLAGS, GUIDE_OF, rq, vtx, convert, powers, matchProduct, matchesFor, analyze, analyzeEye, rank, fD, rxStr, pad, axNorm, A10, LIM, parseRx, parseK, bcList, nearestBC };
+return { P, ADD, ADD_FLAGS, GUIDE_OF, rq, vtx, convert, powers, matchProduct, matchesFor, analyze, analyzeEye, rank, fD, rxStr, pad, axNorm, A10, LIM, parseRx, parseAdd, parseK, bcList, nearestBC };
 })();
 if (typeof module !== 'undefined') module.exports = E;
 </script>
@@ -687,12 +694,12 @@ if (typeof module !== 'undefined') module.exports = E;
 <script>
 /* ===== UI ===== */
 (() => {
-const { P, convert, matchProduct, rank, fD, rxStr, parseRx, parseK, nearestBC, ADD_FLAGS, GUIDE_OF } = E;
+const { P, convert, matchProduct, rank, fD, rxStr, parseRx, parseAdd, parseK, nearestBC, ADD_FLAGS, GUIDE_OF } = E;
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const svg = d => `<svg class="i" viewBox="0 0 24 24">${d}</svg>`;
 
-/* Multifocal guides, reduced to the ADD rule and one adjustment line each (from each maker's guide) */
+/* Multifocal guides, reduced to one adjustment line each (from each maker's guide) */
 const GUIDES = {
   alcon: { name: 'Alcon TOTAL30 Multifocal fitting guide', url: 'https://alcon.widen.net/s/8zxsbnpz7j/w900436305-0322-fg-lefcona-us',
     tweak: 'Near weak: +0.50 D on the non-dominant eye, same ADD.' },
@@ -706,14 +713,13 @@ const GUIDES = {
     tweak: 'Near weak: +0.25 D on the non-dominant eye. Distance weak: lower the dominant eye one ADD step (MID/HIGH: non-dominant to MID with +0.25 D).' },
 };
 
-const VIEWS = [['auto', 'Best fit'], ['sph', 'Spheres'], ['toric', 'Torics'], ['mf', 'Multifocals'], ['mft', 'Multifocal torics']];
-const REPS = [['', 'Any'], ['daily', 'Daily'], ['wk', '1–2 week'], ['monthly', 'Monthly'], ['other', 'Custom']];
+const VIEWS = [['auto', 'Best fit'], ['sph', 'Spheres'], ['toric', 'Torics'], ['mf', 'Multifocals'], ['mft', 'MF torics']];
 const TYPE_LABEL = { sph: 'Sphere', toric: 'Toric', mf: 'Multifocal', mft: 'Multifocal toric' };
-const REP_LABEL = { daily: 'Daily', '1wk': '1 week', '2wk': '2 week', monthly: 'Monthly', quarterly: 'Custom', '6 mo': '6 months' };
+const REP_LABEL = { daily: 'Daily', '1wk': '1 week', '2wk': '2 week', monthly: 'Monthly', quarterly: 'Custom', '6 mo': '6 mo' };
 const repGroup = m => m === 'daily' ? 'daily' : m === '1wk' || m === '2wk' ? 'wk' : m === 'monthly' ? 'monthly' : 'other';
 const BIG4 = ['Alcon', 'Bausch + Lomb', 'CooperVision', 'J&J Acuvue'];
 const EYE_NAME = { OD: 'Right eye', OS: 'Left eye' };
-const state = { view: 'auto', rep: '', sort: null, dir: 1, open: new Set() };
+const state = { view: 'auto', eye: 'OD', open: new Set() };
 
 /* ----- Inputs ----- */
 function readCtx() {
@@ -722,9 +728,11 @@ function readCtx() {
   const dom = document.querySelector('input[name=dom]:checked').value;
   const eyes = {};
   for (const e of ['OD', 'OS']) {
-    const rx = parseRx($(`#rx-${e}`).value), k = parseK($(`#k-${e}`).value);
-    const r = { eye: e, rx, k, ok: !!(rx && !rx.err), kOk: !!(k && !k.err), dom: dom === e };
+    const rx = parseRx($(`#rx-${e}`).value), addIn = parseAdd($(`#add-${e}`).value), k = parseK($(`#k-${e}`).value);
+    const r = { eye: e, rx, addIn, k, ok: !!(rx && !rx.err), kOk: !!(k && !k.err), dom: dom === e };
     if (r.ok) {
+      // The ADD box wins over an "add" typed inside the Rx box.
+      if (typeof addIn === 'number') rx.add = addIn;
       r.cl = convert(rx, dmm).cl;
       r.hasAdd = rx.add != null;
       r.toric = Math.abs(r.cl.cyl) >= 0.75 - 1e-9;
@@ -736,76 +744,66 @@ function readCtx() {
   return { dmm, dom, eyes };
 }
 const clText = r => r.mode === 'sph' || r.mode === 'mf' ? rxStr(r.cl.se, 0, 0) : rxStr(r.cl.sph, r.cl.cyl, r.cl.ax);
+// Read-back only when the typed text is not already plain (shorthand, no decimals, words, plus cylinder).
 function echo(r) {
   if (r.rx && r.rx.err) return `<span class="e">${esc(r.rx.err)}</span>`;
   if (!r.ok) return '';
-  return `Read as <b>${rxStr(r.rx.sph, r.rx.cyl, r.rx.ax)}${r.hasAdd ? ` add +${r.rx.add.toFixed(2)}` : ''}</b>`;
+  const typed = $(`#rx-${r.eye}`).value;
+  const plain = /^\s*[+-]?\d+\.\d{2}(\s*[+-]\d+\.\d{2}\s*x\s*\d{1,3})?\s*$/i.test(typed) && !(r.rx.cyl > 0);
+  return plain ? '' : `Read as <b>${rxStr(r.rx.sph, r.rx.cyl, r.rx.ax)}</b>`;
 }
-function kecho(r) {
-  if (r.k && r.k.err) return '<span class="e">Type the base curve in mm, e.g. 7.80</span>';
-  if (!r.kOk) return '';
-  return r.k.avg ? `Average <b>${r.k.mm.toFixed(2)} mm</b>` : (Math.abs(r.k.mm - parseFloat($(`#k-${r.eye}`).value)) > 0.005 ? `<b>${r.k.mm.toFixed(2)} mm</b>` : '');
-}
+const aecho = r => r.addIn && r.addIn.err ? `<span class="e">${esc(r.addIn.err)}</span>` : '';
+const kecho = r => r.k && r.k.err ? '<span class="e">Type mm, e.g. 7.80</span>' : (r.kOk && (r.k.avg || Math.abs(r.k.mm - parseFloat($(`#k-${r.eye}`).value)) > 0.005) ? `<b>${r.k.mm.toFixed(2)} mm</b>` : '');
 
 /* ----- Matching ----- */
 function modesFor(r, view) {
-  if (!r.ok) return [];
   if (view === 'auto') { const m = [r.mode]; if (r.toric && Math.abs(r.cl.cyl) <= 0.75 + 1e-9) m.push(r.hasAdd ? 'mf' : 'sph'); return m; }
   if ((view === 'toric' || view === 'mft') && !r.toric) return [];
   if ((view === 'mf' || view === 'mft') && !r.hasAdd) return [];
   return [view];
 }
 function fitEye(p, r, view) {
-  const modes = modesFor(r, view);
-  if (!modes.length) return { ok: false, why: view === 'toric' || view === 'mft' ? 'This Rx has no cylinder to correct' : 'This Rx has no ADD' };
-  let last = null;
-  for (const md of modes) {
+  for (const md of modesFor(r, view)) {
     const m = matchProduct(p, { ...r.need, mode: md });
     if (m.ok) { m.mode = md; m.rank = rank(m, 'none'); return m; }
-    last = m;
   }
-  return last;
+  return null;
 }
 const inView = (p, view) => view === 'auto' || p.custom || p.ty.includes(view);
 function rowsFor(r, view) {
-  const q = $('#q').value.trim().toLowerCase(), hi = $('#hidk').checked, all = $('#all').checked;
+  const q = $('#q').value.trim().toLowerCase(), rep = $('#rep').value, hi = $('#hidk').checked;
   const out = [];
   for (const p of P) {
     if (!inView(p, view)) continue;
     if (q && !(p.mk + ' ' + p.nm).toLowerCase().includes(q)) continue;
-    if (state.rep && repGroup(p.mod) !== state.rep) continue;
+    if (rep && repGroup(p.mod) !== rep) continue;
     if (hi && p.dk < 100) continue;
     const m = fitEye(p, r, view);
-    if (!m.ok && !all) continue;
-    const bc = r.kOk ? nearestBC(p.bc, r.k.mm) : null;
-    out.push({ p, m, bc });
+    if (!m) continue;
+    out.push({ p, m, bc: r.kOk ? nearestBC(p.bc, r.k.mm) : null });
   }
   return out;
 }
-const firstBC = p => { const L = E.bcList(p.bc); return Array.isArray(L) ? L[0] : L.min; };
-const SORTS = {
+// Stock first, then no-trial-set, then custom (a custom BC can always match the cornea).
+const tier = p => p.custom ? 2 : p.st === 'tld' ? 1 : 0;
+const bySort = {
+  auto: (a, b) => (a.bc && b.bc ? Math.abs(a.bc.d) - Math.abs(b.bc.d) : 0) || a.m.rank - b.m.rank,
+  fit: (a, b) => a.m.rank - b.m.rank,
   name: (a, b) => a.p.nm.localeCompare(b.p.nm),
-  rep: (a, b) => a.p.mod.localeCompare(b.p.mod),
-  pw: (a, b) => (a.m.ok ? a.m.rank : 99) - (b.m.ok ? b.m.rank : 99),
-  bc: (a, b) => (a.bc ? a.bc.bc : firstBC(a.p)) - (b.bc ? b.bc.bc : firstBC(b.p)),
-  dia: (a, b) => (parseFloat(a.p.dia) || 0) - (parseFloat(b.p.dia) || 0),
-  dk: (a, b) => a.p.dk - b.p.dk,
+  dk: (a, b) => b.p.dk - a.p.dk,
 };
-function defaultSort(a, b) {
-  if (a.m.ok !== b.m.ok) return a.m.ok ? -1 : 1;
-  // Stock first, then trial-set-discontinued, then custom (a custom BC always matches the cornea).
-  const tier = p => p.custom ? 2 : p.st === 'tld' ? 1 : 0;
-  if (tier(a.p) !== tier(b.p)) return tier(a.p) - tier(b.p);
-  if (a.bc && b.bc) { const d = Math.abs(a.bc.d) - Math.abs(b.bc.d); if (Math.abs(d) > 1e-9) return d; }
-  const f = (a.m.rank ?? 99) - (b.m.rank ?? 99); if (Math.abs(f) > 1e-9) return f;
-  return a.p.nm.localeCompare(b.p.nm);
+function sortRows(rows) {
+  const s = $('#sort').value, f = bySort[s];
+  rows.sort((a, b) => (s === 'name' || s === 'dk' ? 0 : tier(a.p) - tier(b.p)) || f(a, b) || a.p.nm.localeCompare(b.p.nm));
+  if ($('#grp').checked) rows.sort((a, b) => { const ia = BIG4.indexOf(a.p.mk), ib = BIG4.indexOf(b.p.mk); return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib) || a.p.mk.localeCompare(b.p.mk); });
+  return rows;
 }
 
-/* ----- Cells ----- */
+/* ----- Pieces ----- */
 const STATUS = { tld: ['b-tld', 'No trial lenses'], disc: ['b-disc', 'Discontinued'], custom: ['b-cust', 'Custom'], limited: ['b-lim', 'Limited'] };
 const isUV = p => (p.notes || []).some(n => /UNVERIFIED/.test(n)) || !!p.addFlag;
-const badges = (p, m) => (STATUS[p.st] ? `<span class="badge ${STATUS[p.st][0]}">${STATUS[p.st][1]}</span>` : '') + (p.mto ? '<span class="badge b-mto">Made to order</span>' : '') + (isUV(p) ? '<span class="badge b-uv">Unverified item</span>' : '') + (!m.ok ? '<span class="badge b-out">Does not fit</span>' : '');
-const typeOf = p => p.custom ? 'Custom, all types' : TYPE_LABEL[p.ty[0]];
+const badges = p => (STATUS[p.st] ? `<span class="badge ${STATUS[p.st][0]}">${STATUS[p.st][1]}</span>` : '') + (p.mto ? '<span class="badge b-mto">Made to order</span>' : '') + (isUV(p) ? '<span class="badge b-uv">Unverified item</span>' : '');
+const typeOf = p => p.custom ? 'Custom' : TYPE_LABEL[p.ty[0]];
 function shortNote(m, r) {
   const n = [];
   if (m.mode !== r.mode) n.push(m.mode === 'sph' ? 'sphere at spherical equivalent' : 'spherical MF at spherical equivalent');
@@ -814,108 +812,79 @@ function shortNote(m, r) {
   if (Math.abs(m.sphDiff || 0) > 1e-9) n.push('nearest sphere');
   return n.join(' · ');
 }
-function powerCell(m, r) {
-  if (!m.ok) return `<span class="na">—</span><small>${esc(m.why || '')}</small>`;
-  let s = `<span class="v">${m.cyl ? rxStr(m.sph, m.cyl, m.ax) : rxStr(m.sph, 0, 0)}</span>`;
-  if (m.add) s += ` <span class="add">ADD ${esc(m.add.lens)}</span>`;
-  const note = shortNote(m, r);
-  return s + (note ? `<small>${esc(note)}</small>` : '');
-}
-function bcCell(row) {
-  const multi = /[\/(–]/.test(row.p.bc);
-  if (row.bc && multi) return `${row.bc.bc.toFixed(1)}<small>of ${esc(row.p.bc.replace(/\s*\(.*\)/, ''))}</small>`;
-  return esc(row.p.bc.replace(/\s*\(.*\)/, ''));
-}
-
-/* ----- Details (kept short) ----- */
+const lensRx = (m, ascii) => m.cyl ? rxStr(m.sph, m.cyl, m.ax, ascii) : rxStr(m.sph, 0, 0, ascii);
+const bcUsed = row => row.bc ? row.bc.bc.toFixed(1) : row.p.bc.replace(/\s*\(.*\)/, '').replace(/\s*\/\s*/g, '/');
 const AX_DESC = ax => ax.length === 180 ? 'any axis' : ax.length === 36 && ax[0] === 5 ? '5° steps' : ax.length === 18 ? '10° steps' : ax.join(', ') + '°';
-function sphRange(p) {
-  if (p.dispSph) return p.dispSph;
-  const segs = p.sph || p.bands.flatMap(b => b.s);
-  const L = E.powers(segs);
-  return `${fD(L[L.length - 1])} to ${fD(L[0])}`;
-}
+function sphRange(p) { const L = E.powers(p.sph || p.bands.flatMap(b => b.s)); return `${fD(L[L.length - 1])} to ${fD(L[0])}`; }
 function cylText(p) {
-  if (p.dispCyl) return p.dispCyl;
   if (!p.bands) return 'Not made';
   if (p.custom) return '−0.50 to −10.00, any axis';
   const cyls = [...new Set(p.bands.flatMap(b => b.c))].sort((a, b) => b - a).map(c => fD(c));
-  const limited = p.bands.some(b => b.ax.length < 18);
-  return `${cyls.join(', ')} · ${limited ? 'some axes limited by power' : AX_DESC(p.bands[0].ax)}`;
+  return `${cyls.join(', ')} · ${p.bands.some(b => b.ax.length < 18) ? 'some axes limited by power' : AX_DESC(p.bands[0].ax)}`;
 }
-function addText(p) {
-  if (p.dispAdd) return p.dispAdd;
-  return { alcon: 'LO, MED, HI', bl: 'Low, High', jj: 'LOW, MID, HIGH', cvbf: '+1.00 to +2.50, D and N', cvbtmf: '+1.00 to +2.50, D and N', odsLMH: 'Low, Med, High', odsLH: 'Low, High', revive: '+0.50 to +3.00' }[p.add] || 'Not made';
+const addText = p => ({ alcon: 'LO, MED, HI', bl: 'Low, High', jj: 'LOW, MID, HIGH', cvbf: '+1.00 to +2.50, D and N', cvbtmf: '+1.00 to +2.50, D and N', odsLMH: 'Low, Med, High', odsLH: 'Low, High', revive: '+0.50 to +3.00' }[p.add] || 'Not made');
+// One-line chart note: "OD CL TRIAL: ACUVUE OASYS MAX 1-Day -2.00DS BC 8.5 mm Daily"
+function chartLine(r, row) {
+  const pw = lensRx(row.m, true).replace(/ DS$/, 'DS').replace(/ x /, 'x').replace(/ /g, '');
+  return `${r.eye} CL TRIAL: ${row.p.nm} ${pw}${row.m.add ? ` ADD ${row.m.add.lens}` : ''} BC ${bcUsed(row)} mm ${REP_LABEL[row.p.mod] || row.p.mod}`;
 }
 function details(row, r) {
-  const p = row.p, m = row.m;
-  const gk = p.add && GUIDE_OF[p.add], g = gk && GUIDES[gk];
-  let mf = '';
-  if (m.ok && m.add) {
-    mf = `<div class="mfbox"><p><span class="k">ADD ${esc(m.add.lens)}</span> for the ${r.dom ? 'dominant' : 'non-dominant'} eye. ${esc(m.add.rule)}.</p>
-      ${g ? `<p>${esc(g.tweak)}</p><p><a href="${g.url}" target="_blank" rel="noopener noreferrer">${esc(g.name)} ↗</a></p>` : '<p>No manufacturer fitting guide found for this lens. ADD band from ODspecs (unverified).</p>'}</div>`;
-  }
-  const notes = [...(m.ok ? m.notes.filter(n => !/^ADD|Spectacle ADD|ODspecs: trial|Made to order|Custom lens/.test(n)) : [m.why]), ...(p.notes || []), ...(p.addFlag && m.ok && m.add ? [ADD_FLAGS[p.addFlag]] : [])].filter(Boolean);
-  return `<dl class="dl">
+  const p = row.p, m = row.m, g = p.add && GUIDES[GUIDE_OF[p.add]];
+  const mf = m.add ? `<div class="mfbox"><p><span class="k">ADD ${esc(m.add.lens)}</span> for the ${r.dom ? 'dominant' : 'non-dominant'} eye. ${esc(m.add.rule)}.</p>
+    ${g ? `<p>${esc(g.tweak)}</p><p><a href="${g.url}" target="_blank" rel="noopener noreferrer">${esc(g.name)} ↗</a></p>` : '<p>No maker fitting guide found for this lens. ADD band from ODspecs (unverified).</p>'}</div>` : '';
+  const notes = [...m.notes.filter(n => !/^ADD|Spectacle ADD|ODspecs: trial|Made to order|Custom lens/.test(n)), ...(p.notes || []), ...(p.addFlag && m.add ? [ADD_FLAGS[p.addFlag]] : [])];
+  const line = chartLine(r, row);
+  return `<div class="det"><dl class="dl">
       <div><dt>Sphere powers</dt><dd>${esc(sphRange(p))}</dd></div>
       <div><dt>Cylinder / axis</dt><dd>${esc(cylText(p))}</dd></div>
       <div><dt>ADD</dt><dd>${esc(p.ty.some(t => t === 'mf' || t === 'mft') ? addText(p) : 'Not made')}</dd></div>
-      <div><dt>Lens</dt><dd>${esc(p.mk)} · ${typeOf(p)}<br>BC ${esc(p.bc)} mm · DIA ${esc(p.dia)} mm · Dk ${p.dk}</dd></div>
+      <div><dt>Base curves · DIA</dt><dd>${esc(p.bc)} mm · ${esc(p.dia)} mm</dd></div>
     </dl>${mf}
     ${notes.length ? `<ul class="notes">${notes.map(t => `<li class="${/UNVERIFIED|isagree/.test(t) ? 'w' : ''}">${esc(t)}</li>`).join('')}</ul>` : ''}
-    ${m.ok ? `<div class="copyrow"><button class="btn" type="button" data-copy="${r.eye}:${p.id}">${svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')}Copy chart note</button><span class="copied" aria-live="polite"></span></div>` : ''}`;
+    <div class="copyrow"><button class="btn" type="button" data-copy="${esc(line)}">${svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>')}Copy</button><span class="preview">${esc(line)}</span><span class="copied" aria-live="polite"></span></div></div>`;
+}
+function lensRow(row, r) {
+  const p = row.p, m = row.m, key = `${r.eye}:${p.id}`, open = state.open.has(key);
+  const note = shortNote(m, r);
+  return `<div class="lens"><div class="row" role="button" tabindex="0" data-key="${key}" aria-expanded="${open}">
+      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${esc(p.mk)} · ${typeOf(p)}</span><span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
+      <dl class="grid">
+        <div><dt>Replace</dt><dd class="rep">${REP_LABEL[p.mod] || esc(p.mod)}</dd></div>
+        <div><dt>Lens power</dt><dd class="pw"><span class="v">${lensRx(m)}</span>${m.add ? ` <span class="add">ADD ${esc(m.add.lens)}</span>` : ''}</dd></div>
+        <div><dt>BC mm</dt><dd>${esc(bcUsed(row))}</dd></div>
+        <div><dt>DIA</dt><dd>${esc(p.dia.replace(/\s*\(.*\)/, '').replace(/\.0(?=–|$)/g, ''))}</dd></div>
+        <div><dt>Dk</dt><dd>${p.dk}</dd></div>
+      </dl>${note ? `<span class="note">${esc(note)}</span>` : ''}</div>${open ? details(row, r) : ''}</div>`;
 }
 
 /* ----- Render ----- */
-let ctx = null;
-const cache = {};
-function section(r) {
-  const head = `<div class="sechead"><h2>${EYE_NAME[r.eye]} <span>${r.eye}</span></h2>`;
-  if (!r.ok) return `<section class="eyesec">${head}</div><p class="empty">${r.rx && r.rx.err ? esc(r.rx.err) : `Type the ${r.eye} glasses Rx above.`}</p></section>`;
-  const rows = rowsFor(r, state.view);
-  rows.sort(state.sort ? (a, b) => state.dir * SORTS[state.sort](a, b) || defaultSort(a, b) : defaultSort);
-  cache[r.eye] = rows;
-  const fits = rows.filter(x => x.m.ok).length;
-  const meta = `<span class="meta">CL <b>${clText(r)}</b>${r.hasAdd ? ` · add +${r.rx.add.toFixed(2)}` : ''} · ${TYPE_LABEL[r.mode].toLowerCase()}${r.hasAdd ? ` · ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · cornea <b>${r.k.mm.toFixed(2)} mm</b>` : ''} · ${fits} lens${fits === 1 ? '' : 'es'}${r.kOk && !state.sort ? ', closest BC first' : ''}</span></div>`;
-  const th = (k, l) => `<th aria-sort="${state.sort === k ? (state.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${k}">${l}</button></th>`;
+function column(r, view) {
+  const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta">CL <b>${clText(r)}</b>${r.hasAdd ? ` · <span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · cornea <b>${r.k.mm.toFixed(2)}</b> mm` : ''}</p>` : ''}</div>`;
+  if (!r.ok) return { n: null, html: `${head(null)}<p class="empty">${r.rx && r.rx.err ? esc(r.rx.err) : `Type the ${r.eye} glasses Rx above.`}</p>` };
+  const rows = sortRows(rowsFor(r, view));
   let body = '', grp = null;
-  const list = $('#grp').checked ? [...rows].sort((a, b) => { const ia = BIG4.indexOf(a.p.mk), ib = BIG4.indexOf(b.p.mk); return (ia < 0 ? 9 : ia) - (ib < 0 ? 9 : ib) || a.p.mk.localeCompare(b.p.mk); }) : rows;
-  for (const row of list) {
-    const p = row.p, key = `${r.eye}:${p.id}`, open = state.open.has(key);
-    if ($('#grp').checked && p.mk !== grp) { grp = p.mk; body += `<tr class="grp"><td colspan="7">${esc(grp)}</td></tr>`; }
-    body += `<tr class="lens" data-key="${key}">
-      <td class="exp"><button type="button" aria-expanded="${open}" aria-label="Details for ${esc(p.nm)}, ${r.eye}">${svg('<path d="M9 6l6 6-6 6"/>')}</button></td>
-      <td class="lname"><div class="nm">${esc(p.nm)}${badges(p, row.m)}</div><div class="co">${esc(p.mk)} · ${typeOf(p)}</div></td>
-      <td data-l="Replace">${REP_LABEL[p.mod] || esc(p.mod)}</td>
-      <td data-l="Lens power" class="pw pwc">${powerCell(row.m, r)}</td>
-      <td data-l="BC (mm)" class="n">${bcCell(row)}</td>
-      <td data-l="DIA (mm)" class="n">${esc(p.dia)}</td>
-      <td data-l="Dk" class="n">${p.dk}</td></tr>`;
-    if (open) body += `<tr class="det"><td colspan="7">${details(row, r)}</td></tr>`;
+  for (const row of rows) {
+    if ($('#grp').checked && row.p.mk !== grp) { grp = row.p.mk; body += `<div class="grp">${esc(grp)}</div>`; }
+    body += lensRow(row, r);
   }
-  const table = `<div class="listwrap"><table><thead><tr><th class="sr">Details</th>${th('name', 'Lens')}${th('rep', 'Replace')}${th('pw', 'Lens power')}${th('bc', 'BC (mm)')}${th('dia', 'DIA (mm)')}${th('dk', 'Dk')}</tr></thead><tbody>${body || `<tr><td colspan="7" class="empty">No ${state.view === 'auto' ? '' : VIEWS.find(v => v[0] === state.view)[1].toLowerCase() + ' '}lens fits this eye with these filters.</td></tr>`}</tbody></table></div>`;
-  return `<section class="eyesec" aria-label="${EYE_NAME[r.eye]} lenses">${head}${meta}${table}</section>`;
+  const vlabel = VIEWS.find(v => v[0] === view)[1].toLowerCase();
+  const none = view !== 'auto' && modesFor(r, view).length === 0
+    ? `This eye's Rx has no ${view === 'mf' ? 'ADD' : view === 'toric' ? 'cylinder' : 'cylinder and ADD'} for ${vlabel}.`
+    : 'No lens fits this eye with these filters.';
+  return { n: rows.length, html: head(rows.length) + (body || `<p class="empty">${none}</p>`) };
 }
+let ctx = null;
 function render() {
   ctx = readCtx();
-  for (const e of ['OD', 'OS']) { $(`#echo-${e}`).innerHTML = echo(ctx.eyes[e]); $(`#kecho-${e}`).innerHTML = kecho(ctx.eyes[e]); }
+  for (const e of ['OD', 'OS']) { const r = ctx.eyes[e]; $(`#echo-${e}`).innerHTML = echo(r); $(`#aecho-${e}`).innerHTML = aecho(r); $(`#kecho-${e}`).innerHTML = kecho(r); }
   $('#types').innerHTML = VIEWS.map(([v, l]) => `<button class="chip" type="button" data-v="${v}" aria-pressed="${state.view === v}">${l}</button>`).join('');
-  $('#reps').innerHTML = REPS.map(([v, l]) => `<button class="chip" type="button" data-rep="${v}" aria-pressed="${state.rep === v}">${l}</button>`).join('');
-  $('#eyes').innerHTML = section(ctx.eyes.OD) + section(ctx.eyes.OS);
+  const cols = ['OD', 'OS'].map(e => column(ctx.eyes[e], state.view));
+  $('#switch').innerHTML = ['OD', 'OS'].map((e, i) => `<button type="button" data-eye="${e}" aria-pressed="${state.eye === e}">${e} ${EYE_NAME[e].split(' ')[0]}${cols[i].n != null ? `<small>${cols[i].n}</small>` : ''}</button>`).join('');
+  const keep = [...document.querySelectorAll('.col')].map(c => c.scrollTop);
+  $('#cols').innerHTML = cols.map((c, i) => `<section class="col" id="col-${i ? 'OS' : 'OD'}" aria-label="${i ? 'Left' : 'Right'} eye lenses" ${(i ? 'OS' : 'OD') !== state.eye ? 'data-other' : ''}>${c.html}</section>`).join('');
+  document.querySelectorAll('.col').forEach((c, i) => { c.scrollTop = keep[i] || 0; c.hidden = matchMedia('(max-width:899px)').matches && c.hasAttribute('data-other'); });
 }
 
-/* ----- Copy a lens as a chart note ----- */
-function chartNote(eye, row) {
-  const r = ctx.eyes[eye], p = row.p, m = row.m;
-  const L = [
-    `${eye} CL TRIAL: ${p.nm} (${p.mk})`,
-    `${eye} glasses ${rxStr(r.rx.sph, r.rx.cyl, r.rx.ax, true)}${r.hasAdd ? ` ADD +${r.rx.add.toFixed(2)}` : ''}${r.kOk ? ` | cornea ${r.k.mm.toFixed(2)} mm` : ''}`,
-    `${eye} CL ${m.cyl ? rxStr(m.sph, m.cyl, m.ax, true) : rxStr(m.sph, 0, 0, true)}${m.add ? ` ADD ${m.add.lens} (${r.dom ? 'dominant' : 'non-dominant'})` : ''} | BC ${row.bc ? row.bc.bc.toFixed(1) : p.bc} mm | DIA ${p.dia} mm | Dk ${p.dk} | ${REP_LABEL[p.mod] || p.mod}`,
-    ...m.notes.map(n => `${eye} note: ${n}`),
-    `Vertex ${ctx.dmm} mm. Starting trial lens; verify on eye.`,
-  ];
-  return L.join('\n').replace(/−/g, '-').replace(/→/g, '->').replace(/≈/g, '~').replace(/·/g, '*').replace(/θ/g, 'theta').replace(/°/g, ' deg');
-}
 async function copyText(text, out) {
   try { await navigator.clipboard.writeText(text); out.textContent = 'Copied.'; }
   catch {
@@ -927,30 +896,34 @@ async function copyText(text, out) {
 }
 
 /* ----- Events ----- */
-['input', 'change'].forEach(ev => { $('.strip').addEventListener(ev, render); $('.set').addEventListener(ev, render); });
+['input', 'change'].forEach(ev => { $('.entry').addEventListener(ev, render); $('#set').addEventListener(ev, render); });
 $('#q').addEventListener('input', render);
-['#hidk', '#grp', '#all'].forEach(s => $(s).addEventListener('change', render));
+['#rep', '#sort', '#hidk', '#grp'].forEach(s => $(s).addEventListener('change', render));
 $('#types').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) { state.view = b.dataset.v; render(); } });
-$('#reps').addEventListener('click', e => { const b = e.target.closest('[data-rep]'); if (b) { state.rep = b.dataset.rep; render(); } });
+$('#switch').addEventListener('click', e => { const b = e.target.closest('[data-eye]'); if (b) { state.eye = b.dataset.eye; render(); } });
+matchMedia('(max-width:899px)').addEventListener('change', render);
 $('#copyeye').addEventListener('click', () => {
-  if (!$('#rx-OD').value.trim() && !$('#k-OD').value.trim()) { $('#rx-OD').focus(); return; }
-  $('#rx-OS').value = $('#rx-OD').value; $('#k-OS').value = $('#k-OD').value;
+  if (!$('#rx-OD').value.trim()) { $('#rx-OD').focus(); return; }
+  for (const f of ['rx', 'add', 'k']) $(`#${f}-OS`).value = $(`#${f}-OD`).value;
   render();
 });
 $('#clear').addEventListener('click', () => {
-  for (const id of ['rx-OD', 'k-OD', 'rx-OS', 'k-OS']) $('#' + id).value = '';
+  for (const f of ['rx', 'add', 'k']) for (const e of ['OD', 'OS']) $(`#${f}-${e}`).value = '';
   state.open.clear(); render(); $('#rx-OD').focus();
 });
-$('#eyes').addEventListener('click', e => {
-  const s = e.target.closest('[data-sort]');
-  if (s) { const k = s.dataset.sort; if (state.sort === k) state.dir = -state.dir; else { state.sort = k; state.dir = 1; } render(); return; }
-  const c = e.target.closest('[data-copy]');
-  if (c) { const [eye, id] = c.dataset.copy.split(':'); copyText(chartNote(eye, cache[eye].find(x => x.p.id === id)), c.nextElementSibling); return; }
-  if (e.target.closest('a,tr.det')) return;
-  const tr = e.target.closest('tr.lens'); if (!tr) return;
-  const key = tr.dataset.key; state.open.has(key) ? state.open.delete(key) : state.open.add(key);
+function toggle(row) {
+  const key = row.dataset.key; state.open.has(key) ? state.open.delete(key) : state.open.add(key);
   render();
-  if (e.target.closest('.exp')) { const b = document.querySelector(`tr.lens[data-key="${key}"] .exp button`); if (b) b.focus(); }
+  const again = document.querySelector(`.row[data-key="${key}"]`); if (again) again.focus({ preventScroll: true });
+}
+$('#cols').addEventListener('click', e => {
+  const c = e.target.closest('[data-copy]'); if (c) { copyText(c.dataset.copy, c.parentElement.querySelector('.copied')); return; }
+  if (e.target.closest('a,.det')) return;
+  const row = e.target.closest('.row'); if (row) toggle(row);
+});
+$('#cols').addEventListener('keydown', e => {
+  const row = e.target.closest('.row');
+  if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(row); }
 });
 render();
 })();
