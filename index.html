@@ -17,7 +17,7 @@
 /* Layout: compact Rx entry, one filter bar, then OD and OS lens columns that scroll on their own (one column + switch on phones). */
 :root{
   --bg:#0D1416; --panel:#121B1D; --panel2:#18242A; --line:#22302F; --line2:#2E3E3D;
-  --text:#EEF3F2; --muted:#8FA3A1; --dim:#5F7371;
+  --text:#EEF3F2; --muted:#9DB0AE; --dim:#7F9391;
   --accent:#F2B544; --white:#FFFFFF; --ink:#0D1416; --bad:#FF7A85; --warn:#FFB27A;
   --r:14px; --sans:-apple-system,"SF Pro Display","SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -50,11 +50,11 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .eyename{display:flex;flex-direction:column;justify-content:center}
 .eyename b{font-size:1.3rem;letter-spacing:-.01em;line-height:1.1}
 .eyename small{color:var(--muted);font-size:.8rem}
-.cell label{display:block;font-size:.75rem;color:var(--muted)}
+.cell label{display:block;font-size:.82rem;color:var(--muted)}
 .rxin,.addin,.kin{width:100%;border:0;background:transparent;color:var(--white);font:600 1.15rem var(--mono);padding:2px 0;min-height:36px}
 .rxin::placeholder,.addin::placeholder,.kin::placeholder{color:var(--dim);font-weight:500}
 .rxin:focus,.addin:focus,.kin:focus{outline:none}
-.echo{font-size:.8rem;color:var(--muted);min-height:0}
+.echo{font-size:.85rem;color:var(--muted);min-height:0}
 .echo:empty{display:none}
 .echo b{color:var(--text);font-weight:600;font-family:var(--mono)}
 .echo .e{color:var(--bad)}
@@ -103,7 +103,7 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .sep{width:1px;height:24px;background:var(--line2)}
 .more{display:contents}
 .filtbtn{display:none}
-.price{color:var(--muted);font-size:.8rem;font-family:var(--mono);white-space:nowrap;margin-left:auto}
+.price{color:var(--muted);font-size:.85rem;font-family:var(--mono);white-space:nowrap;margin-left:auto}
 .price + .chev{margin-left:8px}
 .both{margin-top:12px;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;font-size:.9rem}
 .both p{margin:0 0 6px}.both .pv{font-family:var(--mono);font-size:.82rem;color:var(--muted);word-break:break-word}
@@ -123,7 +123,8 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .colhead h2{margin:0;font-size:1.35rem;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
 .colhead h2 span{color:var(--muted);font-size:.9rem;font-weight:600;letter-spacing:0}
 .colhead h2 .cnt{margin-left:auto;font-size:.85rem;color:var(--muted)}
-.colhead .meta{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+.colhead .meta{margin:6px 0 0;color:var(--muted);font-size:.95rem;display:flex;flex-wrap:wrap;gap:2px 14px}
+.colhead .meta2{margin:2px 0 0;color:var(--muted);font-size:.85rem;display:flex;flex-wrap:wrap;gap:2px 14px}
 .colhead .meta b{color:var(--text);font-family:var(--mono)}
 .colhead .meta .add{color:var(--accent);font-weight:700}
 @media (max-width:899px){
@@ -144,35 +145,35 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .row[aria-expanded=true]{background:var(--panel)}
 .r1{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .nm{font-weight:650;font-size:1rem}
-.mk{color:var(--muted);font-size:.82rem}
+.mk{color:var(--muted);font-size:.85rem}
 .chev{margin-left:auto;color:var(--muted);transition:transform .15s;align-self:center}
 .row[aria-expanded=true] .chev{transform:rotate(90deg);color:var(--text)}
-.grid{display:grid;grid-template-columns:70px minmax(0,1fr) 64px 64px 40px;gap:10px;margin-top:8px;align-items:end}
+.grid{display:grid;grid-template-columns:74px minmax(0,1fr) 68px 64px 44px;gap:10px;margin-top:8px;align-items:end}
 .grid > div{min-width:0}
-.grid dt{font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
-.grid dd{margin:0;font-size:.92rem;font-family:var(--mono);white-space:nowrap}
+.grid dt{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.grid dd{margin:0;font-size:1rem;font-family:var(--mono);white-space:nowrap}
 .grid dd.rep{font-family:var(--sans)}
 .pw{font-family:var(--mono);font-weight:700;font-size:1.05rem;white-space:normal!important}
 .pw .v{white-space:nowrap}
 .pw .add{color:var(--accent);white-space:nowrap}
-.note{display:block;margin-top:4px;color:var(--muted);font-size:.8rem}
-.badge{display:inline-block;font-size:.68rem;font-weight:700;border-radius:999px;padding:0 7px;border:1px solid var(--line2);color:var(--muted);line-height:1.6}
+.note{display:block;margin-top:4px;color:var(--muted);font-size:.88rem}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;border-radius:999px;padding:0 7px;border:1px solid var(--line2);color:var(--muted);line-height:1.6}
 .b-tld,.b-lim,.b-uv{color:var(--warn);border-color:rgba(255,178,122,.35)} .b-disc,.b-out{color:var(--bad);border-color:rgba(255,122,133,.35)} .b-cust,.b-mto{color:var(--accent);border-color:rgba(242,181,68,.35)}
 .grp{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--panel2);border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);box-shadow:inset 4px 0 0 var(--accent);color:var(--white);font-size:1.15rem;font-weight:750;letter-spacing:-.01em}
 .grp:first-of-type{border-top:0}
 .grp .gc{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--ink);background:var(--accent);border-radius:999px;padding:1px 10px}
 .det{padding:4px 16px 16px;background:var(--panel)}
 .dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin:0}
-.dl dt{font-size:.72rem;color:var(--muted)}
-.dl dd{margin:0;font-size:.9rem}
+.dl dt{font-size:.8rem;color:var(--muted)}
+.dl dd{margin:0;font-size:.95rem}
 .mfbox{margin-top:12px;padding:10px 12px;border:1px solid rgba(242,181,68,.35);border-radius:10px;font-size:.9rem}
 .mfbox p{margin:0 0 4px}.mfbox p:last-child{margin:0}
 .mfbox .k{color:var(--accent);font-weight:700}
-.notes{margin:10px 0 0;padding-left:1.1em;color:var(--muted);font-size:.84rem}
+.notes{margin:10px 0 0;padding-left:1.1em;color:var(--muted);font-size:.9rem}
 .notes li.w{color:var(--warn)}
 .copyrow{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .btn{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--white);color:var(--ink);font:700 .9rem var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-.preview{font:.8rem var(--mono);color:var(--muted);word-break:break-word}
+.preview{font:.85rem var(--mono);color:var(--muted);word-break:break-word}
 .copied{color:var(--accent);font-weight:600}
 .empty{padding:28px 16px;color:var(--muted)}
 footer{border-top:1px solid var(--line);margin-top:28px;padding-block:16px 36px;color:var(--muted);font-size:.85rem}
@@ -960,7 +961,8 @@ function lensRow(row, r) {
 
 /* ----- Render ----- */
 function column(r, view) {
-  const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta">CL <b>${clText(r)}</b> <span title="Exact vertex-converted value before rounding to lens steps">(calculated ${r.vx.cyl ? `${fD(r.vx.v1)} ${fD(r.vx.cylRaw)} x ${String(r.cl.ax).padStart(3, '0')}` : fD(r.vx.v1)})</span>${r.hasAdd ? ` · <span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · K <b>${r.k.d.toFixed(2)}</b> D → BC <b>${r.target.bc.toFixed(1)}</b> mm` : ''}</p>` : ''}</div>`;
+  const calc = r.ok ? (r.vx.cyl ? `${fD(r.vx.v1)} ${fD(r.vx.cylRaw)} x ${String(r.cl.ax).padStart(3, '0')}` : fD(r.vx.v1)) : '';
+  const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta"><span>CL <b>${clText(r)}</b></span>${r.hasAdd ? `<span><span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}</span>` : ''}</p><p class="meta2"><span title="Exact vertex-converted value before rounding to lens steps">Calculated ${calc}</span>${r.kOk ? `<span>K ${r.k.d.toFixed(2)} D → BC <b>${r.target.bc.toFixed(1)}</b> mm</span>` : '<span>Add K to sort by base curve</span>'}</p>` : ''}</div>`;
   if (!r.ok) return { n: null, html: `${head(null)}<p class="empty">${r.rx && r.rx.err ? esc(r.rx.err) : `Type the ${r.eye} glasses Rx above.`}</p>` };
   const rows = lastRows[r.eye] || [];
   let body = '', grp = null;
@@ -989,8 +991,15 @@ function computeRows() {
     lastRows[e] = rows;
   }
 }
+function syncSortLabel() {
+  const anyK = ctx.eyes.OD.kOk || ctx.eyes.OS.kOk, auto = $('#sort option[value=auto]'), fit = $('#sort option[value=fit]');
+  auto.textContent = anyK ? 'Sort: closest BC' : 'Sort: best fit';
+  fit.hidden = !anyK; // identical to the default until a K is entered
+  if (!anyK && $('#sort').value === 'fit') $('#sort').value = 'auto';
+}
 function render() {
   ctx = readCtx();
+  syncSortLabel();
   computeRows();
   for (const e of ['OD', 'OS']) { const r = ctx.eyes[e]; $(`#echo-${e}`).innerHTML = echo(r); $(`#aecho-${e}`).innerHTML = aecho(r); $(`#kecho-${e}`).innerHTML = kecho(r); }
   $('#types').innerHTML = VIEWS.map(([v, l]) => `<button class="chip" type="button" data-v="${v}" aria-pressed="${state.view === v}">${l}</button>`).join('');
