@@ -261,11 +261,13 @@ const P = [
 // Alcon
 {id:'aohg',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde',ty:['sph'],mod:'monthly',dk:110,bc:'8.6',dia:'14.2',st:'current',sph:g(-12,8,8,6,0.25),notes:['EW up to 6 nights per ODspecs.']},
 {id:'aohgt',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde for Astigmatism',ty:['toric'],mod:'monthly',dk:110,bc:'8.7',dia:'14.5',st:'current',bands:[{s:g(-10,6,6,6),c:C4,ax:A10}]},
-{id:'aomf',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde Multifocal',ty:['mf'],mod:'monthly',dk:110,bc:'8.6',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam'},
+{id:'aomf',mk:'Alcon',nm:'AIR OPTIX plus HydraGlyde Multifocal',ty:['mf'],mod:'monthly',dk:110,bc:'8.6',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'alcon',notes:['ADD table confirmed in Alcon AIR OPTIX plus HydraGlyde Multifocal Professional Fitting Guide (up to +1.25 LO, +1.50 to +2.00 MED, +2.25 to +2.50 HI, both eyes).'],
+  guide:{name:'Alcon AIR OPTIX plus HydraGlyde Multifocal fitting guide',url:'https://alcon.widen.net/s/vmjh5shqzt/w900246931-pfig-lotfb-us',tweak:'Near weak: +0.50 D on the non-dominant eye, same ADD.'}},
 {id:'aond',mk:'Alcon',nm:'AIR OPTIX NIGHT & DAY AQUA',ty:['sph'],mod:'monthly',dk:140,bc:'8.4 / 8.6',dia:'13.8',st:'current',sph:g(-10,6,8,6)},
 {id:'dacp',mk:'Alcon',nm:'DAILIES AquaComfort Plus',ty:['sph'],mod:'daily',dk:26,bc:'8.7',dia:'14.0',st:'current',sph:g(-15,8,6,6,0.5)},
 {id:'dacpt',mk:'Alcon',nm:'DAILIES AquaComfort Plus Toric',ty:['toric'],mod:'daily',dk:26,bc:'8.8',dia:'14.4',st:'limited',bands:[{s:g(-8,4,6,4),c:C3,ax:LIM}],notes:['ODspecs: trial lenses discontinued, "some availability".','ODspecs disagrees with itself: main table +4 to −9, toric table and detail page +4 to −8. −8 used.']},
-{id:'dacpmf',mk:'Alcon',nm:'DAILIES AquaComfort Plus Multifocal',ty:['mf'],mod:'daily',dk:26,bc:'8.7',dia:'14.0',st:'current',sph:g(-10,6,10,6),add:'alcon',addFlag:'alconFam',notes:['UNVERIFIED: sphere step size not stated on ODspecs; 0.25 D assumed.']},
+{id:'dacpmf',mk:'Alcon',nm:'DAILIES AquaComfort Plus Multifocal',ty:['mf'],mod:'daily',dk:26,bc:'8.7',dia:'14.0',st:'current',sph:g(-10,6,10,6),add:'alcon',notes:['ADD table confirmed in Alcon DAILIES AquaComfort Plus Multifocal Professional Fitting Guide (up to +1.25 LO, +1.50 to +2.00 MED, +2.25 to +2.50 HI, both eyes).','UNVERIFIED: sphere step size not stated on ODspecs or in the Alcon guide; 0.25 D assumed.'],
+  guide:{name:'Alcon DAILIES AquaComfort Plus Multifocal fitting guide',url:'https://alcon.widen.net/s/qklqkctcwv/w900252465-fg-nelfa-dailies-us',tweak:'Near weak: +0.50 D on the non-dominant eye, same ADD.'}},
 {id:'dt1',mk:'Alcon',nm:'DAILIES TOTAL1',ty:['sph'],mod:'daily',dk:140,bc:'8.5',dia:'14.1',st:'current',sph:g(-12,6,6,6,0.5)},
 {id:'dt1t',mk:'Alcon',nm:'DAILIES TOTAL1 for Astigmatism',ty:['toric'],mod:'daily',dk:140,bc:'8.6',dia:'14.5',st:'current',bands:[
   {s:[[-6,0,0.25]],c:C3,ax:A10},{s:[[-6,0,0.25]],c:[-2.25],ax:LIM},
@@ -281,7 +283,7 @@ const P = [
 {id:'t30',mk:'Alcon',nm:'TOTAL30',ty:['sph'],mod:'monthly',dk:123,bc:'8.4',dia:'14.2',st:'current',sph:g(-12,8,8,6,0.25)},
 {id:'t30t',mk:'Alcon',nm:'TOTAL30 for Astigmatism',ty:['toric'],mod:'monthly',dk:123,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-10,8,6,6),c:C5,ax:A10}]},
 {id:'t30mf',mk:'Alcon',nm:'TOTAL30 Multifocal',ty:['mf'],mod:'monthly',dk:123,bc:'8.4',dia:'14.2',st:'current',sph:g(-10,6,10,6),add:'alcon',notes:['Range confirmed by Alcon PFIG: +6.00 to −10.00 in 0.25 D steps.']},
-{id:'t30mfa',mk:'Alcon',nm:'TOTAL30 Multifocal for Astigmatism',ty:['mft'],mod:'monthly',dk:123,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-6,4,6,4),c:C3,ax:A10}],add:'alcon',addFlag:'t30mfa',notes:['ODspecs lists ADDs Low (1.25), Med (2.00), Hi (2.50).']},
+{id:'t30mfa',mk:'Alcon',nm:'TOTAL30 Multifocal for Astigmatism',ty:['mft'],mod:'monthly',dk:123,bc:'8.6',dia:'14.5',st:'current',bands:[{s:g(-6,4,6,4),c:C3,ax:A10}],add:'alcon',addFlag:'t30mfa',notes:['Parameters confirmed by Alcon 2025 TOTAL30 family package insert (W900506796): sphere +4.00 to −6.00 (0.25), cyl −0.75/−1.25/−1.75, axis 10°–180° (10° steps), ADD LO/MED/HI.']},
 // Bausch + Lomb
 {id:'bt1',mk:'Bausch + Lomb',nm:'Biotrue ONEday',ty:['sph'],mod:'daily',dk:42,bc:'8.6',dia:'14.2',st:'current',sph:g(-12,6,6.5,6,0.25)},
 {id:'bt1t',mk:'Bausch + Lomb',nm:'Biotrue ONEday for Astigmatism',ty:['toric'],mod:'daily',dk:42,bc:'8.4',dia:'14.5',st:'current',bands:[
@@ -429,8 +431,7 @@ const ADD = {
   },
 };
 const ADD_FLAGS = {
-  alconFam: 'This lens has its own Alcon guide (PDF not read). ADD table taken from the TOTAL30 Multifocal guide, which uses the same Alcon 3-ADD system (UNVERIFIED for this lens).',
-  t30mfa: 'TOTAL30 Multifocal for Astigmatism guide not read. ADD table taken from the TOTAL30 Multifocal guide (UNVERIFIED for this lens).',
+  t30mfa: 'UNVERIFIED ADD rule: the package insert points to a TOTAL30 family fitting guide edition that covers this lens, but that edition is not online (Alcon links an older edition without it). ADD table taken from the TOTAL30 Multifocal guide.',
 };
 const GUIDE_OF = { alcon: 'alcon', bl: 'bl', jj: 'jj', cvbf: 'cvbf', cvbtmf: 'cvbtmf', odsLMH: null, odsLH: null, revive: null };
 
