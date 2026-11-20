@@ -116,6 +116,10 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 }
 /* lens rows */
 .lens{border-bottom:1px solid var(--line)}
+.col{position:relative}
+.lens.snap{box-shadow:inset 3px 0 0 var(--accent)}
+.lens.snap .row{background:var(--panel)}
+.snapmiss{margin:0;padding:10px 16px;color:var(--warn);font-size:.88rem;border-bottom:1px solid var(--line)}
 .row{display:block;width:100%;text-align:left;padding:12px 16px;cursor:pointer;transition:background .15s}
 .row:hover{background:var(--panel)}
 .row[aria-expanded=true]{background:var(--panel)}
@@ -135,7 +139,9 @@ svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .note{display:block;margin-top:4px;color:var(--muted);font-size:.8rem}
 .badge{display:inline-block;font-size:.68rem;font-weight:700;border-radius:999px;padding:0 7px;border:1px solid var(--line2);color:var(--muted);line-height:1.6}
 .b-tld,.b-lim,.b-uv{color:var(--warn);border-color:rgba(255,178,122,.35)} .b-disc,.b-out{color:var(--bad);border-color:rgba(255,122,133,.35)} .b-cust,.b-mto{color:var(--accent);border-color:rgba(242,181,68,.35)}
-.grp{padding:14px 16px 6px;color:var(--muted);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}
+.grp{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--panel2);border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);box-shadow:inset 4px 0 0 var(--accent);color:var(--white);font-size:1.15rem;font-weight:750;letter-spacing:-.01em}
+.grp:first-of-type{border-top:0}
+.grp .gc{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--ink);background:var(--accent);border-radius:999px;padding:1px 10px}
 .det{padding:4px 16px 16px;background:var(--panel)}
 .dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin:0}
 .dl dt{font-size:.72rem;color:var(--muted)}
@@ -846,8 +852,8 @@ function details(row, r) {
 function lensRow(row, r) {
   const p = row.p, m = row.m, key = `${r.eye}:${p.id}`, open = state.open.has(key);
   const note = shortNote(m, r);
-  return `<div class="lens"><div class="row" role="button" tabindex="0" data-key="${key}" aria-expanded="${open}">
-      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${esc(p.mk)} · ${typeOf(p)}</span><span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
+  return `<div class="lens${key === state.snap ? ' snap' : ''}"><div class="row" role="button" tabindex="0" data-key="${key}" aria-expanded="${open}">
+      <div class="r1"><span class="nm">${esc(p.nm)}</span>${badges(p)}<span class="mk">${$('#grp').checked ? '' : esc(p.mk) + ' · '}${typeOf(p)}</span><span class="chev">${svg('<path d="M9 6l6 6-6 6"/>')}</span></div>
       <dl class="grid">
         <div><dt>Replace</dt><dd class="rep">${REP_LABEL[p.mod] || esc(p.mod)}</dd></div>
         <div><dt>Lens power</dt><dd class="pw"><span class="v">${lensRx(m)}</span>${m.add ? ` <span class="add">ADD ${esc(m.add.lens)}</span>` : ''}</dd></div>
@@ -862,9 +868,11 @@ function column(r, view) {
   const head = n => `<div class="colhead"><h2>${r.eye} <span>${EYE_NAME[r.eye]}</span>${n != null ? `<span class="cnt">${n} lens${n === 1 ? '' : 'es'}</span>` : ''}</h2>${r.ok ? `<p class="meta">CL <b>${clText(r)}</b>${r.hasAdd ? ` · <span class="add">ADD +${r.rx.add.toFixed(2)}</span> ${r.dom ? 'dominant' : 'non-dominant'}` : ''}${r.kOk ? ` · cornea <b>${r.k.mm.toFixed(2)}</b> mm` : ''}</p>` : ''}</div>`;
   if (!r.ok) return { n: null, html: `${head(null)}<p class="empty">${r.rx && r.rx.err ? esc(r.rx.err) : `Type the ${r.eye} glasses Rx above.`}</p>` };
   const rows = sortRows(rowsFor(r, view));
+  lastRows[r.eye] = rows;
   let body = '', grp = null;
+  if (r.eye === 'OS' && state.snapMiss) body += `<p class="snapmiss">No ${esc(state.snapMiss)} family lens fits OS.</p>`;
   for (const row of rows) {
-    if ($('#grp').checked && row.p.mk !== grp) { grp = row.p.mk; body += `<div class="grp">${esc(grp)}</div>`; }
+    if ($('#grp').checked && row.p.mk !== grp) { grp = row.p.mk; const n = rows.filter(x => x.p.mk === grp).length; body += `<div class="grp">${esc(grp)}<span class="gc">${n}</span></div>`; }
     body += lensRow(row, r);
   }
   const vlabel = VIEWS.find(v => v[0] === view)[1].toLowerCase();
@@ -874,6 +882,7 @@ function column(r, view) {
   return { n: rows.length, html: head(rows.length) + (body || `<p class="empty">${none}</p>`) };
 }
 let ctx = null;
+const lastRows = {};
 function render() {
   ctx = readCtx();
   for (const e of ['OD', 'OS']) { const r = ctx.eyes[e]; $(`#echo-${e}`).innerHTML = echo(r); $(`#aecho-${e}`).innerHTML = aecho(r); $(`#kecho-${e}`).innerHTML = kecho(r); }
@@ -900,7 +909,13 @@ async function copyText(text, out) {
 $('#q').addEventListener('input', render);
 ['#rep', '#sort', '#hidk', '#grp'].forEach(s => $(s).addEventListener('change', render));
 $('#types').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) { state.view = b.dataset.v; render(); } });
-$('#switch').addEventListener('click', e => { const b = e.target.closest('[data-eye]'); if (b) { state.eye = b.dataset.eye; render(); } });
+$('#switch').addEventListener('click', e => {
+  const b = e.target.closest('[data-eye]'); if (!b) return;
+  state.eye = b.dataset.eye; render();
+  // On phones, switching to OS jumps to the lens matched from OD.
+  const el = state.eye === 'OS' && state.snap && document.querySelector(`.row[data-key="${state.snap}"]`);
+  if (el) el.scrollIntoView({ block: 'center' });
+});
 matchMedia('(max-width:899px)').addEventListener('change', render);
 $('#copyeye').addEventListener('click', () => {
   if (!$('#rx-OD').value.trim()) { $('#rx-OD').focus(); return; }
@@ -911,10 +926,40 @@ $('#clear').addEventListener('click', () => {
   for (const f of ['rx', 'add', 'k']) for (const e of ['OD', 'OS']) $(`#${f}-${e}`).value = '';
   state.open.clear(); render(); $('#rx-OD').focus();
 });
+// Opening an OD lens opens the same lens in OS, or the closest name from the same maker
+// (e.g. TOTAL30 in OD → TOTAL30 for Astigmatism in OS).
+function snapOS(id) {
+  const p = P.find(x => x.id === id), rows = lastRows.OS || [];
+  let best = rows.find(r => r.p.id === id), score = 0;
+  if (!best) {
+    const words = s => s.toLowerCase().split(/\s+/), a = words(p.nm);
+    for (const r of rows) {
+      if (r.p.mk !== p.mk) continue;
+      const b = words(r.p.nm); let i = 0;
+      while (i < a.length && i < b.length && a[i] === b[i]) i++;
+      if (i > score) { score = i; best = r; }
+    }
+  }
+  for (const k of [...state.open]) if (k.startsWith('OS:')) state.open.delete(k);
+  state.snapMiss = best ? null : p.nm;
+  state.snap = best ? 'OS:' + best.p.id : null;
+  if (best) state.open.add(state.snap);
+}
+function scrollToSnap() {
+  const el = state.snap && document.querySelector(`.row[data-key="${state.snap}"]`);
+  if (!el) return;
+  const col = $('#col-OS'), lens = el.closest('.lens');
+  const smooth = matchMedia('(prefers-reduced-motion: no-preference)').matches ? 'smooth' : 'auto';
+  if (col && !matchMedia('(max-width:899px)').matches) col.scrollTo({ top: lens.offsetTop - col.querySelector('.colhead').offsetHeight - 6, behavior: smooth });
+}
 function toggle(row) {
-  const key = row.dataset.key; state.open.has(key) ? state.open.delete(key) : state.open.add(key);
+  const key = row.dataset.key, opening = !state.open.has(key);
+  opening ? state.open.add(key) : state.open.delete(key);
+  if (key.startsWith('OD:')) { if (opening) snapOS(key.slice(3)); else { state.snap = null; state.snapMiss = null; } }
+  else if (key === state.snap && !opening) state.snap = null;
   render();
   const again = document.querySelector(`.row[data-key="${key}"]`); if (again) again.focus({ preventScroll: true });
+  if (opening && key.startsWith('OD:')) scrollToSnap();
 }
 $('#cols').addEventListener('click', e => {
   const c = e.target.closest('[data-copy]'); if (c) { copyText(c.dataset.copy, c.parentElement.querySelector('.copied')); return; }
